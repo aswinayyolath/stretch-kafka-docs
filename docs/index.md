@@ -43,14 +43,14 @@ Kafka brokers and controllers need stable and low-latency communication across c
 Submariner is a CNCF project that provides secure cross-cluster networking for Kubernetes. It enables:
 
 - **Direct Pod-to-Pod Connectivity**: Allowing Kafka brokers and controllers to communicate seamlessly.
-- **Service Discovery Across Clusters** :Making Kafka services reachable from any cluster.
+- **Service Discovery Across Clusters**: Making Kafka services reachable from any cluster.
 - **Secure Communication**: Using IPsec, WireGuard, or VXLAN for encrypted cross-cluster traffic.
 
 ### Why Cilium?
 Cilium is an eBPF-based networking solution that enhances Kubernetes security and observability. It provides:
 
 - **Transparent Multi-Cluster Networking**: Using Cilium ClusterMesh for service discovery and connectivity.
-- **Enhanced Security** Enforcing fine-grained security policies across clusters.
+- **Enhanced Security**: Enforcing fine-grained security policies across clusters.
 - **Performance Optimization**: Using eBPF for high-performance packet processing.
 
 ### Which One to Choose?

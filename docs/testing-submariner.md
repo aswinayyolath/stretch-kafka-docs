@@ -1,6 +1,9 @@
 # Validating Submariner Setup
 
-## Testing connections between cluseters
+## Testing Connections Between Clusters
+
+Run the following command to check the status of connections between clusters:
+
 ```bash
 $ subctl show connections --kubeconfig config-str2-a
 Cluster "<REDACTED>:6443"
@@ -12,7 +15,10 @@ worker0.<REDACTED>   cluster2   10.13.26.218   no    libreswan      242.1.0.0/16
 worker0.<REDACTED>   cluster3   10.15.133.94   no    libreswan      242.2.0.0/16   connected   614.899µs
 ```
 
-## Diagnosing issues with the submariner setup
+## Diagnosing Issues with the Submariner Setup
+
+Use the following command to diagnose potential issues with Submariner:
+
 ```bash
 $ subctl diagnose all --kubeconfig config-str2-a
 Cluster "<REDACTED>:6443"
@@ -48,7 +54,10 @@ Skipping inter-cluster firewall check as it requires two kubeconfigs. Please run
 subctl version: v0.18.0
 ```
 
-## Diagnosing intra cluster network connectivity
+## Diagnosing Intra-Cluster Network Connectivity
+
+To check intra-cluster VXLAN firewall configuration, use:
+
 ```bash
 $ subctl diagnose firewall intra-cluster --kubeconfig config-str2-a
 Cluster "<REDACTED>:6443"
