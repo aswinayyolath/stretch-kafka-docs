@@ -1,0 +1,4 @@
+site_name: Stretch Kafka Cluster Documentation
+site_url: https://github.com/aswinayyolath/stretch-kafka-docs
+theme:
+  name: readthedocs
