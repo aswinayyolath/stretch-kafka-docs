@@ -1,17 +1,8 @@
-site_name: Stretch Kafka Cluster Documentation
+site_name: Strimzi Stretch Cluster
 site_url: https://github.com/aswinayyolath/stretch-kafka-docs
 theme:
   name: readthedocs
-  features:
-    - content.code.copy
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
   - pymdownx.superfences
