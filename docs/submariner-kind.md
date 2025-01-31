@@ -1,8 +1,11 @@
-## Setup submariner on kind
-This section documents installation of submariner on kind using calico CNI.
+## Setting Up Submariner on Kind
 
-### Installing Kind with Cliaco CNI
-The submariner's shipyard project is used to install kind for our use case.
+This section details installing Submariner on Kind using Calico CNI.
+
+### Installing Kind with Calico CNI
+
+We use Submariner's Shipyard project to install Kind:
+
 ```bash
 $ git clone https://github.com/submariner-io/shipyard.git
 $ cd shipyard/
@@ -20,42 +23,47 @@ EOF
 $ make SETTINGS=deploy.two.clusters.nocni.yaml clusters
 ```
 
-### Increase  inotify resource limits.
-Since kind clusters have a default limit on the resources that can be allocated on it, we might not be able to deploy an entire streched kafka clusters on it. Hence, we increase the limits on the clusters.
+### Increasing inotify Resource Limits
+
+Kind clusters have default resource limits that may be insufficient for stretched Kafka clusters. Increase the limits using:
+
 ```bash
 $ sudo sysctl fs.inotify.max_user_watches=524288
 $ sudo sysctl fs.inotify.max_user_instances=512
 ```
+### Verifying Cluster Installation
 
-### List clusters
-Verify the installation of the kind clusters using the get clusters command
+####  List clusters
+
 ```bash
 $ kind get clusters
 ```
 
-### Check the current Context
-Use the kubectl to vew the cluster details using contexts. 
-<br>
-Export the `KUBECONFIG` env VAR for switching between clusters using contexts.
+### Check Current Context
+
+Set the correct KUBECONFIG environment variable and list available contexts:
+
 ```bash
 $ export KUBECONFIG=$(find $(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f -printf %p:)
 $ kubectl config get-contexts
 ```
 
-### Confirm that we have two nodes in each cluster
+### Verify Node Counts in Each Cluster
 ```bash
 $ kubectl --context cluster1 get nodes
 $ kubectl --context cluster2 get nodes
 ```
 
-## Deploy Calico 
-Calico is deployed by creating the tigera-operator from project calico, modifying IP addresses in the CRs and applying them on each cluster.
-<br>
-Create a folder for calico manifests
+## Deploying Calico
+
+Create a folder for Calico manifests:
+
+
 ```bash
 $ mkdir calico_manifests
 ```
-### Deploy Calico on cluster1
+### Install Calico on Cluster 1
+
 ```bash
 $ kubectl --context cluster1 create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/tigera-operator.yaml
 
@@ -67,7 +75,6 @@ $ sed -i 's,VXLANCrossSubnet,VXLAN,g' calico_manifests/custom-resources.yaml
 
 $ kubectl --context cluster1 apply -f calico_manifests/custom-resources.yaml
 ```
-The CIDRs are changed from the default value to some non overlapping one
 
 ### Install Calico on Cluster 2
 ```bash
@@ -81,19 +88,23 @@ $ sed -i 's,VXLANCrossSubnet,VXLAN,g' calico_manifests/custom-resources.yaml
 
 $ kubectl --context cluster2 apply -f calico_manifests/custom-resources.yaml
 ```
-## Deploy Submariner
-### Deploying the broker on one of the clusters
+## Deploying Submariner
+
+### Deploying the Broker
+
 ```bash
 $ subctl deploy-broker --context cluster1
 ```
 
-### Connecting the clusters to the broker
+### Connecting Clusters to the Broker
+
 ```bash
 $ subctl join --context cluster1  broker-info.subm --clusterid cluster1 --natt=false
 $ subctl join --context cluster2  broker-info.subm --clusterid cluster2 --natt=false
 ```
 
-###  Check Submariner connections
+###  Checking Submariner Connections
+
 ```bash
 $ subctl show connections  --context cluster2   
 $ subctl show connections  --context cluster1
