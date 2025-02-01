@@ -1,0 +1,8 @@
+nav:
+    - index.md
+    - setting-up-submariner.md
+    - Installing-Submariner-on-Kind.md
+    - Installing-Submariner-on-OCP.md
+    - testing-submariner.md
+    - building-strimzi-for-stretch-cluster.md
+    - Deploying-Strimzi-in-Stretch-Mode.md
