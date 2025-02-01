@@ -19,10 +19,10 @@ A Stretch Kafka Cluster extends a single Kafka deployment across multiple Kubern
 
 ### Key Benefits of Stretch Kafka Clusters
 
-- **High Availability**: If one cluster fails, Kafka continues to operate using nodes in the remaining clusters.
-- **Scalability**: Kafka brokers can be added across multiple clusters to handle increasing workloads.
-- **Disaster Recovery**: With brokers in multiple clusters, the system remains operational even if a Kubernetes cluster experiences an outage.
-- **Optimized Workload Distribution**: Workloads can be balanced across different clusters for improved resource utilization.
+- **High Availability**: If one Kubernetes cluster fails, Kafka continues to operate using nodes in the remaining K8s clusters.
+- **Scalability**: Kafka brokers can be added across multiple K8s clusters to handle increasing workloads.
+- **Disaster Recovery**: With brokers in multiple K8s clusters, the system remains operational even if a Kubernetes cluster experiences an outage.
+- **Optimized Workload Distribution**: Workloads can be balanced across different K8s clusters for improved resource utilization.
 
 ### Deployment Considerations
 
