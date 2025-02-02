@@ -1,4 +1,4 @@
-# Stretch Kafka Cluster Documentation
+# Stretch Cluster using Strimzi
 
 Apache Kafka is widely used for high-throughput, real-time data streaming, but deploying it across multiple Kubernetes clusters presents unique challenges. A Stretch Kafka Cluster is a deployment model where Kafka brokers and controllers are distributed across multiple Kubernetes clusters while maintaining a single logical Kafka cluster. This enables improved fault tolerance, scalability, and disaster recovery while keeping latency low.
 
