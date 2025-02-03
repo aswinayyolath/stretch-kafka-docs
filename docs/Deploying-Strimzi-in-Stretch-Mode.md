@@ -153,16 +153,16 @@ Once the setup is complete, apply the Kafka and KafkaNodePool CRs in the Central
 
 ```yaml
 
-Central Cluster CR (spec.cluster is missing in these CRs)
-----------------------------------------------------------
+#Central Cluster CR (spec.cluster is missing in these CRs)
+#----------------------------------------------------------
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
   name: controller
   labels:
     strimzi.io/cluster: my-cluster
-    strimzi.io/submariner-cluster-id: "cluster1" #------->  This should be used in SANS. It will be present in all the KNP CR irrespective of where the SPS  will be deployed 
-spec:                                                        
+    strimzi.io/submariner-cluster-id: "cluster1" #-------> submariner-cluster-id will be used in controller.quorum.voters and advertised.listeners to enable cross cluster communication  
+spec:                                            #-------> In addition to this every controller and broker Pods will have a SANS entry with the Submariner exported DNS name                       
   replicas: 3
   roles:
     - controller

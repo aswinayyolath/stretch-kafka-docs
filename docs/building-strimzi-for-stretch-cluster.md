@@ -54,4 +54,4 @@ If you prefer to test the operator without building it from source, you can use 
 aswinayyolath/stretchcluster:latest
 ```
 
-A detailed guide on testing the stretch cluster will be provided in the next section
+A detailed guide on testing the stretch cluster will be provided in the later section
