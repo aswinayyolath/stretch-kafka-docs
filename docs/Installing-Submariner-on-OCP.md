@@ -4,7 +4,7 @@ This section explains setting up Submariner with OpenShift clusters using the Gl
 
 ### Before you begin
 
-The following steps assume that you are creating a stretch cluster across three OpenShift clusters and have created three separate kubeconfig files, one for each OpenShift cluster. Each file should only contain a reference to a single cluster. One of these clusters must host the Submariner broker.
+The following steps assume that you are creating a stretch cluster across three OpenShift clusters and have created three separate kubeconfig files, one for each OpenShift cluster. Each file should only contain a reference to a single cluster. Only one of these clusters will host the Submariner broker.
 
 ### Deploying the broker
 
