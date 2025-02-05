@@ -39,19 +39,6 @@ $ subctl join --kubeconfig config-str2-b --clusterid cluster2  broker-info.subm 
 $ subctl join --kubeconfig config-str2-c --clusterid cluster3  broker-info.subm --check-broker-certificate=false
 ```
 
-### Testing cluster connectivity
+### Next steps
 
-Check if the clusters are correctly connected:
-
-```bash
-$ subctl show connections --kubeconfig config-str2-a
-Cluster "<REDACTED>:6443"
-
- ✓ Showing Connections
-
-GATEWAY              CLUSTER    REMOTE IP      NAT   CABLE DRIVER   SUBNETS        STATUS      RTT avg.
-worker0.<REDACTED>   cluster2   10.13.26.218   no    libreswan      242.1.0.0/16   connected   1.2786ms
-worker0.<REDACTED>   cluster3   10.15.133.94   no    libreswan      242.2.0.0/16   connected   614.899µs
-```
-
-This confirms successful cross-cluster communication.
+Check if the clusters are [correctly connected](./testing-submariner.md).
