@@ -1,6 +1,6 @@
-# Validating Submariner Setup
+# Validating the Submariner deployment
 
-## Testing Connections Between Clusters
+## Testing connections between clusters
 
 Run the following command to check the status of connections between clusters:
 
@@ -15,7 +15,7 @@ worker0.<REDACTED>   cluster2   10.13.26.218   no    libreswan      242.1.0.0/16
 worker0.<REDACTED>   cluster3   10.15.133.94   no    libreswan      242.2.0.0/16   connected   614.899µs
 ```
 
-## Diagnosing Issues with the Submariner Setup
+## Diagnosing issues with the Submariner deployment
 
 Use the following command to diagnose potential issues with Submariner:
 
@@ -54,7 +54,7 @@ Skipping inter-cluster firewall check as it requires two kubeconfigs. Please run
 subctl version: v0.18.0
 ```
 
-## Diagnosing Intra-Cluster Network Connectivity
+## Diagnosing intra-cluster network connectivity
 
 To check intra-cluster VXLAN firewall configuration, use:
 
