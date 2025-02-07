@@ -5,4 +5,14 @@ theme:
 markdown_extensions:
   - admonition
   - pymdownx.details
+<<<<<<< Updated upstream
   - pymdownx.superfences
+=======
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption
+plugins:
+    - search
+    # - awesome-pages
+>>>>>>> Stashed changes
