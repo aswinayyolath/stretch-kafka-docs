@@ -4,7 +4,7 @@ This section details installing Submariner on Kind using Calico CNI.
 
 ### Installing Kind with Calico CNI
 
-We use Submariner's Shipyard project to install Kind:
+We use Submariner's Shipyard project to install Submariner on Kind:
 
 ```bash
 $ git clone https://github.com/submariner-io/shipyard.git
@@ -41,7 +41,7 @@ $ kind get clusters
 
 ### Check Current Context
 
-Set the correct KUBECONFIG environment variable and list available contexts:
+Set the correct `KUBECONFIG` environment variable and list available contexts:
 
 ```bash
 $ export KUBECONFIG=$(find $(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f -printf %p:)
