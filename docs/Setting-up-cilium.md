@@ -369,4 +369,15 @@ cluster-c address -> cluster-c DNS
 ```
 This would solve the issue of not being able to resolve pods using headless services.
 
-Now proceed with installing the operator on stretch mode
+Now proceed with installing the operator on stretch mode where the kafka CR's cross-cluster-type label is referenced as cilium
+```yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: my-cluster
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+    strimzi.io/cross-cluster-type: "cilium"  #-- change this to cilium instead of submainer 
+```
+No edits to clusterRole is needed as no Service Exports are needed for cilium
