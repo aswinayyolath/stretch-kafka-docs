@@ -1,18 +1,17 @@
 # Stretch with cilium with calico CNI on K8s
-This doc outlines how to install stretch with cilium when there are three kubernetes clusters with calico CNI installed
+This page outlines the steps required to install and configure Cilium for stretch clusters using Calico as the CNI across three Kubernetes clusters.
 
 ### Prerequisites
-- The Loadbalancer address should be available for cilium api-mesh server
-- Calico CNI is required for this setup
+- A LoadBalancer address must be available for the Cilium API mesh server.
+- Calico CNI should be installed on all clusters.
 - Non conflicting IP space.
 
-## Installing Cilium
-
-First install cilium on cluster1
+## Step 1: Install Cilium on the First Cluster
 ```bash
 cilium install --set cluster.name=cluster1 --set cluster.id=1 --context kubernetes-admin@stretch-calico-1
 ```
-Now we can copy the cilium ca from this cluster to the other clusters so that mutual tls is achieved between the clusters
+
+## Step 2: Copy Cilium CA to other Clusters for Mutual TLS
 ```bash
 kubectl --context=kubernetes-admin@stretch-calico-1 get secret -n kube-system cilium-ca -o yaml | \
   kubectl --context=kubernetes-admin@stretch-calico-2 create -f -
@@ -21,16 +20,14 @@ kubectl --context=kubernetes-admin@stretch-calico-1 get secret -n kube-system ci
 kubectl --context=kubernetes-admin@stretch-calico-1 get secret -n kube-system cilium-ca -o yaml | \
   kubectl --context=kubernetes-admin@stretch-calico-3 create -f -
 ```
-Once this is done, we can install cilium in cluster2 
+
+## Step 3: Install Cilium on Remaining Clusters
 ```bash
 cilium install --set cluster.name=cluster2 --set cluster.id=2 --context kubernetes-admin@stretch-calico-2
-```
-and cluster3
-```bash
 cilium install --set cluster.name=cluster3 --set cluster.id=3 --context kubernetes-admin@stretch-calico-3
 ```
 
-### Check if cilium install is OK
+## Step 4: Verify Cilium Installation
 ```bash
 cilium status --context kubernetes-admin@stretch-calico-1 --wait
 cilium status --context kubernetes-admin@stretch-calico-2 --wait
@@ -38,8 +35,8 @@ cilium status --context kubernetes-admin@stretch-calico-3 --wait
 ```
 All 3 clusters should show all resources "OK"
 
-### Enabling clustermesh
-For all the clusters to work as a mesh, the clustermesh enable command is used as a LoadBalancer service.
+## Step 5: Enabling Cluster Mesh
+To enable communication between clusters, use the following command to expose the ClusterMesh API as a LoadBalancer service
 ```bash
 cilium clustermesh enable --context kubernetes-admin@stretch-calico-1 --service-type LoadBalancer
 cilium clustermesh enable --context kubernetes-admin@stretch-calico-2 --service-type LoadBalancer
@@ -47,35 +44,37 @@ cilium clustermesh enable --context kubernetes-admin@stretch-calico-3 --service-
 ```
 
 
-### Check if clustermesh is ready
+## Step 6: Verify ClusterMesh Status
 ```bash
 cilium clustermesh status --context kubernetes-admin@stretch-calico-1 --wait
 cilium clustermesh status --context kubernetes-admin@stretch-calico-2 --wait
 cilium clustermesh status --context kubernetes-admin@stretch-calico-3 --wait
 ```
-All these commands should return "OK".
+All three clusters should show "OK" for all resources.
 
-### Connect the clusters
+## Step 7: Connecting the clusters
 ```bash
 cilium clustermesh connect --context kubernetes-admin@stretch-calico-1 --destination-context kubernetes-admin@stretch-calico-2
 cilium clustermesh connect --context kubernetes-admin@stretch-calico-1 --destination-context kubernetes-admin@stretch-calico-3
 cilium clustermesh connect --context kubernetes-admin@stretch-calico-2 --destination-context kubernetes-admin@stretch-calico-3
 ```
 
-### Wait to see if the clusters are connected
+## Step 8: Verify Cluster Connectivity
 ```bash
 cilium clustermesh status --context kubernetes-admin@stretch-calico-2 --wait
 ```
-This command should output connections to the other two clusters. We could check this with all three clusters to verify is connectivity is achieved.
+This command should show connections to the other two clusters.
 
-### Test pod connectivity between the clusters
+## Step 9: Testing Pod Connectivity
 Try to ping the pods from one cluster to the other using IP address. Ideally, use and nginx server and webclient to test this connectivity.
 
-## Setting up CoreDNS to resolve IP Address across clusters for headless services
-By Default, cilium clustermesh does not come with cross cluster DNS resolution for headless service. However, we can tweak coredns to resolve headless services across clusters.
+## Setting Up CoreDNS for Cross-Cluster DNS Resolution
+
+### Exposing CoreDNS as NodePort Service
+Cilium ClusterMesh does not provide cross-cluster DNS resolution for headless service by default. We can modify CoreDNS to enable this functionality.
 
 ### Exposing coredns all three clusters
-Create a new DNS service of type NodePort targeting the coredns server so that it is accessbile across clusters.
+Create a NodePort service to expose a CoreDNS across all three clusters.
 ```yaml
 apiVersion: v1
 kind: Service
@@ -102,17 +101,22 @@ spec:
   sessionAffinity: None
   type: NodePort
 ```
-apply this on all 3 clusters
+Apply this service to all three clusters
+
 ```bash
 kubectl --context=kubernetes-admin@stretch-calico-1 apply -f core-dns-nodeport.yaml
 kubectl --context=kubernetes-admin@stretch-calico-2 apply -f core-dns-nodeport.yaml
 kubectl --context=kubernetes-admin@stretch-calico-3 apply -f core-dns-nodeport.yaml
 ```
-Here, the dns service is exposed on port 30053 of infraIP (`xx.xx.xx.xx:30053`).
+Here, the DNS service is exposed on port 30053 of infraIP (xx.xx.xx.xx:30053).
 
 ### Setting up coredns configmap to forward requests
-We'll use a service address convention. We'll specify the cluster details of the pod using its service address like `my-cluster-broker-100.cluster1.my-cluster-kafka-brokers.strimzi.svc.cluster.local`. We have injected a `cluster1` cluster detail here for identifying which DNS this service address should be resolved by.
-#### To set this up, we edit the configmap of Coredns
+We'll use a service address convention to determine the cluster details of a pod based on its service address, such as:
+```
+my-cluster-broker-100.cluster1.my-cluster-kafka-brokers.strimzi.svc.cluster.local
+```
+Here, cluster1 is injected into the address to identify which DNS service should resolve it.
+#### Editing the CoreDNS ConfigMap
 ```bash
 kubectl edit cm coredns -n kube-system --kubeconfig calico-1
 ```
@@ -125,7 +129,7 @@ data:
       rewrite stop {
           name substring cluster2.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.88.34:30053 {
+      forward . x.xx.xx.34:30053 {
           expire 10s
           policy round_robin
       }
@@ -135,7 +139,7 @@ data:
       rewrite stop {
           name substring cluster3.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.84.149:30053 {
+      forward . x.xx.xx.149:30053 {
           expire 10s
           policy round_robin
       }
@@ -179,7 +183,7 @@ cluster2.svc.cluster.local.:53 {
       rewrite stop {
           name substring cluster2.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.88.34:30053 {
+      forward . x.xx.xx.34:30053 {
           expire 10s
           policy round_robin
       }
@@ -189,7 +193,7 @@ cluster3.svc.cluster.local.:53 {
       rewrite stop {
           name substring cluster3.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.84.149:30053 {
+      forward . x.xx.xx.149:30053 {
           expire 10s
           policy round_robin
       }
@@ -197,6 +201,7 @@ cluster3.svc.cluster.local.:53 {
     }
 ```
 so that, when this DNS service is asked to resolve an address ending with `cluster2.svc.cluster.local`, it rewrites the string with a valid one (`.svc.cluster.local`, removing cluster2) and forwards it to the DNS service in the 2nd cluster. The forward rule is followed by ip address of the 2nd cluster to forward all request in that category to the 2nd cluster's coreDNS service. Similarly it forwards the 3rd clusters address to the 3rd cluster for resolution.
+
 <br>  Another rewrite
 ```yaml
 rewrite stop {
@@ -218,7 +223,7 @@ data:
       rewrite stop {
           name substring cluster1.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.88.97:30053 {
+      forward . x.xx.xx.97:30053 {
           expire 10s
           policy round_robin
       }
@@ -228,7 +233,7 @@ data:
       rewrite stop {
           name substring cluster3.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.84.149:30053 {
+      forward . x.xx.xx.149:30053 {
           expire 10s
           policy round_robin
       }
@@ -277,7 +282,7 @@ data:
       rewrite stop {
           name substring cluster1.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.88.97:30053 {
+      forward . x.xx.xx.97:30053 {
           expire 10s
           policy round_robin
       }
@@ -287,7 +292,7 @@ data:
       rewrite stop {
           name substring cluster2.svc.cluster.local svc.cluster.local answer auto
       }
-      forward . 9.46.88.34:30053 {
+      forward . x.xx.xx.34:30053 {
           expire 10s
           policy round_robin
       }
@@ -330,7 +335,7 @@ metadata:
 
 #### Try to DNS resolve using dig
 ```bash
-rohans-mbp:~ rohananilkumar$ dig my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local  @xx.xx.xx.xx -p 30053
+🔥🔥🔥 $ dig my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local  @xx.xx.xx.xx -p 30053
 
 ; <<>> DiG 9.10.6 <<>> my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local @xx.xx.xx.xx -p 30053
 ;; global options: +cmd
@@ -355,6 +360,7 @@ my-cluster-controller-4.my-cluster-kafka-brokers.strimzi.cluster1.svc.cluster.lo
 ;; WHEN: Fri Feb 07 14:22:13 IST 2025
 ;; MSG SIZE  rcvd: 401
 ```
+
 Try with all combination
 ```
 cluster-a address -> cluster-a DNS
@@ -380,4 +386,4 @@ metadata:
     strimzi.io/kraft: enabled
     strimzi.io/cross-cluster-type: "cilium"  #-- change this to cilium instead of submainer 
 ```
-No edits to clusterRole is needed as no Service Exports are needed for cilium
+No edits to clusterRole is needed as no Service Exports are needed for cilium.

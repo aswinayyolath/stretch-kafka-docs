@@ -3,7 +3,8 @@ nav:
     - setting-up-submariner.md
     - Installing-Submariner-on-Kind.md
     - Installing-Submariner-on-OCP.md
-    - setting-up-cilium.md
+    - testing-submariner.md
+    - Setting-up-cilium.md
     - building-strimzi-for-stretch-cluster.md
     - Stretch-Cluster-Architecture.md
     - Deploying-Strimzi-in-Stretch-Mode.md
