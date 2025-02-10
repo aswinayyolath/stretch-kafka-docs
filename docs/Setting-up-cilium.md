@@ -4,7 +4,7 @@ This page outlines the steps required to install and configure Cilium for stretc
 ### Prerequisites
 - A LoadBalancer address must be available for the Cilium API mesh server.
 - Calico CNI should be installed on all clusters.
-- Non conflicting IP space.
+- Non-conflicting IP space across clusters.
 
 ## Step 1: Install Cilium on the First Cluster
 ```bash
