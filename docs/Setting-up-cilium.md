@@ -1,4 +1,4 @@
-# Stretch with cilium with calico CNI on K8s
+# Setting Up Cilium
 This page outlines the steps required to install and configure Cilium for stretch clusters using Calico as the CNI across three Kubernetes clusters.
 
 ### Prerequisites
