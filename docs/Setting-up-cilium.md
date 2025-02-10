@@ -67,13 +67,14 @@ This command should show connections to the other two clusters.
 
 ## Step 9: Testing Pod Connectivity
 Try to ping the pods from one cluster to the other using IP address. Ideally, use and nginx server and webclient to test this connectivity.
+<br><br>
 
 ## Setting Up CoreDNS for Cross-Cluster DNS Resolution
 
 ### Exposing CoreDNS as NodePort Service
 Cilium ClusterMesh does not provide cross-cluster DNS resolution for headless service by default. We can modify CoreDNS to enable this functionality.
 
-### Exposing coredns all three clusters
+### Exposing CoreDNS all three clusters
 Create a NodePort service to expose a CoreDNS across all three clusters.
 ```yaml
 apiVersion: v1
@@ -110,7 +111,7 @@ kubectl --context=kubernetes-admin@stretch-calico-3 apply -f core-dns-nodeport.y
 ```
 Here, the DNS service is exposed on port 30053 of infraIP (xx.xx.xx.xx:30053).
 
-### Setting up coredns configmap to forward requests
+### Setting up CoreDNS configmap to forward requests
 We'll use a service address convention to determine the cluster details of a pod based on its service address, such as:
 ```
 my-cluster-broker-100.cluster1.my-cluster-kafka-brokers.strimzi.svc.cluster.local
@@ -177,7 +178,9 @@ metadata:
   name: coredns
   namespace: kube-system
 ```
+
 Essentially we have added
+
 ```yaml
 cluster2.svc.cluster.local.:53 {
       rewrite stop {
@@ -200,7 +203,7 @@ cluster3.svc.cluster.local.:53 {
       cache 10
     }
 ```
-so that, when this DNS service is asked to resolve an address ending with `cluster2.svc.cluster.local`, it rewrites the string with a valid one (`.svc.cluster.local`, removing cluster2) and forwards it to the DNS service in the 2nd cluster. The forward rule is followed by ip address of the 2nd cluster to forward all request in that category to the 2nd cluster's coreDNS service. Similarly it forwards the 3rd clusters address to the 3rd cluster for resolution.
+When this DNS service is asked to resolve an address ending with `cluster2.svc.cluster.local`, it rewrites the string with a valid one (`.svc.cluster.local`, removing cluster2) and forwards it to the DNS service in the 2nd cluster. The forward rule is followed by ip address of the 2nd cluster to forward all request in that category to the 2nd cluster's coreDNS service. Similarly it forwards the 3rd clusters address to the 3rd cluster for resolution.
 
 <br>  Another rewrite
 ```yaml
@@ -214,7 +217,7 @@ template IN ANY clusterset.local {
 ```
 is added for the DNS to resolve it's own addresses by removing the `cluster1` part from the request and resolve it normally.
 
-For the next cluster, modify the configmap like this:
+The Configmap of cluster 2 is modified to:
 ```yaml
 apiVersion: v1
 data:
@@ -273,7 +276,7 @@ metadata:
 ```
 This sets the resolving rules in reverse. All addresses ending with `cluster1.svc.cluster.local` will modified and sent to the DNS service in the other cluster which can resolve it normally. The addresses ending with `cluster2.svc.cluster.local` will be resolved by the local DNS cluster by removing the `cluster2` part from the address. And cluster 3 address will be sent to resolution by cluster 3 DNS.
 
-For the cluster 3, modify the configmap like this:
+Cluster 3's coreDNS is modified to:
 ```yaml
 apiVersion: v1
 data:
@@ -373,7 +376,6 @@ cluster-c address -> cluster-a DNS
 cluster-c address -> cluster-b DNS
 cluster-c address -> cluster-c DNS
 ```
-This would solve the issue of not being able to resolve pods using headless services.
 
 Now proceed with installing the operator on stretch mode where the kafka CR's cross-cluster-type label is referenced as cilium
 ```yaml
