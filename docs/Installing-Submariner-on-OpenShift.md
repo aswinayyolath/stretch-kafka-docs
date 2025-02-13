@@ -1,4 +1,4 @@
-## Setting up Submariner with OpenShift
+## Installing Submariner on OpenShift
 
 This section explains setting up Submariner with OpenShift clusters using the GlobalNet controller.
 
