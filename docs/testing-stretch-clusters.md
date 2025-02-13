@@ -1,30 +1,30 @@
-# Stretch Cluster Testing
+# Stretch cluster testing
 This section provides an overview of the basic tests performed to validate the functionality of the stretch Kafka cluster using Submariner. The goal of these tests was to ensure basic connectivity, replication, and message flow across multiple Kubernetes clusters.
 
-## Pod Deployment Across Clusters
+## Pod deployment across clusters
 
 ### Purpose
 To confirm that Kafka broker pods are successfully created in multiple clusters as per the stretch configuration.
 
-### Test Execution
+### Test execution
 
-💠 Deployed Kafka, KafkaNodePool CR in central cluster.<br>
+💠 Deployed a `Kafka` and `KafkaNodePool` CR in the central cluster.<br>
 💠 Ensured pods were created in the expected clusters.<br>
 💠 Verified pod logs for successful startup and connectivity.
 
 ### Results
 🔸 Kafka broker and controller pods successfully deployed in different clusters. <br>
 🔸 Pods registered correctly with KRaft controller.<br>
-🔸 No connectivity issues detected between brokers after running.
+🔸 No connectivity issues detected between brokers once running.
 
 ![stretch-architecture](image/PodsInStretchCluster.png){ loading=lazy }
 
-## Metadata Quorum Validation
+## Metadata quorum validation
 
 ### Purpose
-To verify that the Kafka Controller Quorum is correctly established across the clusters and that leader election functions properly.
+To verify that the Kafka controller quorum is correctly established across the clusters and that leader election functions properly.
 
-### Test Execution
+### Test execution
 💠 Deployed Kafka in a stretch cluster setup. <br>
 💠 Verified `controller.quorum.voters` configuration to ensure controllers are recognized across clusters.<br>
 💠 Checked logs of controller nodes to confirm leader election and quorum establishment.
@@ -37,13 +37,13 @@ To verify that the Kafka Controller Quorum is correctly established across the c
 
 ![stretch-architecture](image/metadataquorum.png){ loading=lazy }
 
-## Topic Replication Across Clusters
+## Topic replication across clusters
 
 ### Purpose
 
 To ensure that topic replication functions correctly and that partitions are distributed across multiple clusters.
 
-### Test Execution
+### Test execution
 
 💠 Created a topic with multiple partitions and replication factor >1. <br>
 💠 Checked partition placement across brokers in different clusters.<br>
@@ -60,17 +60,15 @@ To ensure that topic replication functions correctly and that partitions are dis
 
 ![stretch-architecture](image/topicdescribe.png){ loading=lazy }
 
-## Producing and Consuming Messages
+## Producing and consuming messages
 
 ### Purpose
 To validate end-to-end message flow across the stretch cluster.
 
-### Test Execution
+### Test execution
 
 💠 Started a producer and sent messages to a replicated topic.<br>
 💠 Started a consumer in a different cluster and checked for message delivery.
-
-
 
 ### Results:
 
