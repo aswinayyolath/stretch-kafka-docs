@@ -2,7 +2,7 @@ nav:
     - index.md
     - setting-up-submariner.md
     - Installing-Submariner-on-Kind.md
-    - Installing-Submariner-on-OCP.md
+    - Installing-Submariner-on-OpenShift.md
     - testing-submariner.md
     - Setting-up-cilium.md
     - building-strimzi-for-stretch-cluster.md
