@@ -1,4 +1,4 @@
-## Setting up Submariner on Kind
+## Installing Submariner on Kind
 
 This section details installing Submariner on Kind using Calico CNI.
 
