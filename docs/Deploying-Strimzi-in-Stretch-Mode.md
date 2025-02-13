@@ -5,6 +5,8 @@ This section details how to deploy the Strimzi Kafka Operator in Stretch Mode. T
 - Deploying Stretch Clusters in OpenShift Container Platform (OCP)
 - Deploying Stretch Clusters in Vanilla Kubernetes
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/NEPgtXD6voA?si=xrKa_zrzDqhW-B3C" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 Let's first look at how to deploy a stretch cluster in OpenShift.
 
 ## Deploying Stretch Clusters in OCP
