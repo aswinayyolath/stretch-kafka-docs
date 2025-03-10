@@ -9,3 +9,4 @@ nav:
     - Stretch-Cluster-Architecture.md
     - Deploying-Strimzi-in-Stretch-Mode.md
     - testing-stretch-clusters.md
+    - Setting-up-Rack-Awareness-In-Stretch-Cluster.md
