@@ -5,7 +5,7 @@ The Open Messaging Benchmark framework was used to benchmark the stretch Kafka c
  
  - Regular Kafka cluster
  - Stretch cluster with Submariner
- - Stretch kafka cluster with cilium
+ - Stretch cluster with Cilium
 
 The Open messaging benchmark framework deploys 8 benchmark workers and one driver in the K8s environment. Once the tests start, the driver employs the workers to produce/consume messages to the cluster using its bootstrap url.
 
