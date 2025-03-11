@@ -245,7 +245,7 @@ spec:
 ```
 
 ### Stretched kafka cluster with Cilium
-Three K8s clusters were connected using the `cilium` cli and then stretch was implemented on this using the exact same CR used for submariner. 3 brokers, 3 controllers on each of the clusters working together to form a stretched kafka cluster using cilium.
+Three K8s clusters were connected using the `Cilium` cli and then stretch cluster was created on this setup using the CR similar to that of Submariner with 3 brokers and 3 controllers.
 
 ## Findings
 Three test iterations were performed for each environment to eliminate environmental noise. The results were exported as JSON files and plotted using Matplotlib. The following four parameters were analyzed:
