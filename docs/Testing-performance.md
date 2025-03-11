@@ -82,7 +82,7 @@ spec:
     userOperator: {}
 ```
 
-### Stretched kafka cluster with submariner
+### Stretch cluster with Submariner
 The Kafka cluster was deployed across three OCP environments, each hosting three brokers and three controllers. As with the regular Kafka cluster, we used ephemeral storage. Submariner was deployed on all three clusters and connected using the `subctl` binary.
 ```yaml
 #Central Cluster CR (spec.cluster is missing in these CRs)
