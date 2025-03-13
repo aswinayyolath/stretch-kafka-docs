@@ -34,6 +34,8 @@ my-cluster-stretch1-controller-9            1/1     Running   0          23h
 strimzi-cluster-operator-6d7db9dd95-k5m24   1/1     Running   0          23h
 ```
 
+### Stretch Cluster 2 (calico-3)
+
 ```bash
 $ .kube % kubectl get pods --kubeconfig calico-3 -n strimzi
 NAME                                        READY   STATUS    RESTARTS   AGE
