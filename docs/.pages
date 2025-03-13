@@ -9,6 +9,7 @@ nav:
     - Stretch-Cluster-Architecture.md
     - Deploying-Strimzi-in-Stretch-Mode.md
     - testing-stretch-clusters.md
+    - Testing-cluster-failover.md
     - Testing-failover-and-resiliency.md
     - Testing-performance.md
     - Setting-up-Rack-Awareness-In-Stretch-Cluster.md
