@@ -4,7 +4,7 @@
 This test simulates a scenario in which the central cluster goes down. It evaluates the behavior of Kafka topics, leader election, in-sync replicas (ISRs), and how a stretched Kafka cluster handles failover. After testing the failover, the central cluster is recovered to determine if the old state is restored.
 
 ### Cluster setup
-We have 3 kubernetes clusters and a stretched kafka running across each.
+We have three Kubernetes clusters with a stretched Kafka deployment across them.
 
 ```bash
 $ .kube % kubectl get pods --kubeconfig calico-1 -n strimzi
