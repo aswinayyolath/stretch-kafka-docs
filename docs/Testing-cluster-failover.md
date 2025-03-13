@@ -121,7 +121,7 @@ Testing asdf
 ^CProcessed a total of 8 messages
 ```
 
-### Shutting down the central kubernetes cluster 
+### Simulating Central Cluster Failure
 Manually shutting down the central cluster to simulate a cluster failure
 ```bash
 $ .kube % kubectl get pods --kubeconfig calico-1 -n strimzi -v=8
