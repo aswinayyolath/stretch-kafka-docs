@@ -204,3 +204,14 @@ Topic: failover-test	TopicId: 7U-yMkfgT1GfJRY-DoyEhQ	PartitionCount: 6	Replicati
 	Topic: failover-test	Partition: 4	Leader: 6	Replicas: 0,1,2,6,7,8	Isr: 0,6,2,7,8	Elr: 	LastKnownElr:
 	Topic: failover-test	Partition: 5	Leader: 6	Replicas: 1,2,6,7,8,12	Isr: 6,2,12,7,8	Elr: 	LastKnownElr:
 ```
+
+## Interpretation of Results
+
+- The test confirms that Kafka's metadata quorum can successfully transition leadership to available controllers when the central cluster fails.
+- Message production and consumption remain uninterrupted, demonstrating the resilience of stretched clusters.
+- Upon recovery, the central cluster resumes operations, reinstating previous leader assignments where possible.
+- The system effectively handles failover and restoration, ensuring high availability and minimal downtime.
+
+## Conclusion
+
+This failover test validates the effectiveness of stretched Kafka clusters in handling central cluster failures while maintaining data integrity. 
