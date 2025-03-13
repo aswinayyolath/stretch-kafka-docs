@@ -1,5 +1,7 @@
 # Cluster Failover Testing
-This test simulates a scenario in which the central cluster goes down. It outlines what happens to a topic's data, leader, ISRs and how a cluster would handle such a failover scenario. Later in the test, the central failed cluster is recovered to see if the old state is maintained by the strected kafka clusters.
+## Objective
+
+This test simulates a scenario in which the central cluster goes down. It evaluates the behavior of Kafka topics, leader election, in-sync replicas (ISRs), and how a stretched Kafka cluster handles failover. After testing the failover, the central cluster is recovered to determine if the old state is restored.
 
 ### Cluster setup
 We have 3 kubernetes clusters and a stretched kafka running across each.
