@@ -193,7 +193,7 @@ my-cluster-broker-1                         1/1     Running   1 (2m56s ago)   23
 ```
 
 ### Testing if the ISR's come back from the central clusters
-The brokers from the recoered cluster are getting in sync with the partitions and is being reflected in the ISRs
+The brokers from the recovered cluster are getting in sync with the partitions and is being reflected in the ISRs
 ```bash
 [kafka@my-cluster-stretch2-broker-12 kafka]$ bin/kafka-topics.sh --describe --bootstrap-server my-cluster-kafka-bootstrap.strimzi.svc:9092 --topic failover-test
 Topic: failover-test	TopicId: 7U-yMkfgT1GfJRY-DoyEhQ	PartitionCount: 6	ReplicationFactor: 6	Configs: min.insync.replicas=2
