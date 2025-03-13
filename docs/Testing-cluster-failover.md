@@ -48,7 +48,7 @@ my-cluster-stretch2-controller-17           1/1     Running   0          23h
 strimzi-cluster-operator-7966fb9659-zqfmv   1/1     Running   0          23h
 ```
 
-The central cluster has the kafka and kafka nodepool CRs (kubeconfig named calico-1)
+The central cluster contains the Kafka and KafkaNodePool CRs:
 ```bash
 $ .kube % kubectl get kafka -n strimzi --kubeconfig calico-1
 NAME         DESIRED KAFKA REPLICAS   DESIRED ZK REPLICAS   READY   METADATA STATE   WARNINGS
