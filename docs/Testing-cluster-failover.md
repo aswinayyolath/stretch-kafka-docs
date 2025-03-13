@@ -5,7 +5,9 @@ This test simulates a scenario in which the central cluster goes down. It evalua
 
 ### Cluster setup
 We have three Kubernetes clusters with a stretched Kafka deployment across them.
+## Cluster Configurations
 
+### Central Cluster (calico-1)
 ```bash
 $ .kube % kubectl get pods --kubeconfig calico-1 -n strimzi
 NAME                                        READY   STATUS    RESTARTS   AGE
