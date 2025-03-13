@@ -64,7 +64,7 @@ stretch2-controller   3                  ["controller"]   [15,16,17]
 ```
 
 ### Listing the metadata quorum
-Checking if the metadata shows all the brokers and controllers from all the cluster
+Checking if the metadata reflects all brokers and controllers across clusters:
 ```bash
 [kafka@my-cluster-broker-0 kafka]$ bin/kafka-metadata-quorum.sh --bootstrap-server my-cluster-kafka-bootstrap.strimzi.svc:9092 describe --status
 ClusterId:              1RYWwDxMT8mT0lpiqtc69w
