@@ -146,6 +146,38 @@ aswinayyolath/stretchcluster:latest
   value: 'true'
 ```
 
+!!! note
+
+    ✅ Optionally, we can set `STRIMZI_POD_SET_RECONCILIATION_ONLY` in the remote cluster operator deployment to true so that all the other controllers that handle other custom resources do not start.  
+
+Logs reassuring that no other operators have started other than the SPS controller:
+```bash
+2025-03-17 08:54:49 INFO  PodSecurityProviderFactory:43 - Found PodSecurityProvider io.strimzi.plugin.security.profiles.impl.BaselinePodSecurityProvider
+2025-03-17 08:54:49 INFO  PodSecurityProviderFactory:62 - Initializing PodSecurityProvider io.strimzi.plugin.security.profiles.impl.BaselinePodSecurityProvider
+2025-03-17 08:54:49 INFO  ClusterOperator:86 - Creating ClusterOperator for namespace strimzi
+2025-03-17 08:54:49 INFO  ClusterOperator:100 - Starting ClusterOperator for namespace strimzi
+2025-03-17 08:54:49 INFO  ClusterOperator:154 - --Stretch Mode value in ClusterOperator-- true
+2025-03-17 08:54:49 INFO  StrimziPodSetController:594 - Starting the StrimziPodSet controller
+2025-03-17 08:54:49 INFO  ClusterOperator:137 - Setting up periodic reconciliation for namespace strimzi
+2025-03-17 08:54:49 INFO  StrimziPodSetController:563 - Starting StrimziPodSet controller for namespace strimzi
+2025-03-17 08:54:49 INFO  Main:193 - Cluster Operator verticle started in namespace strimzi without label selector
+2025-03-17 08:54:49 WARN  VersionUsageUtils:60 - The client is using resource type 'strimzipodsets' with unstable version 'v1beta2'
+2025-03-17 08:54:49 WARN  VersionUsageUtils:60 - The client is using resource type 'kafkas' with unstable version 'v1beta2'
+2025-03-17 08:54:49 WARN  VersionUsageUtils:60 - The client is using resource type 'kafkaconnects' with unstable version 'v1beta2'
+2025-03-17 08:54:49 WARN  VersionUsageUtils:60 - The client is using resource type 'kafkamirrormaker2s' with unstable version 'v1beta2'
+2025-03-17 08:54:49 INFO  StrimziPodSetController:566 - Waiting for informers to sync
+2025-03-17 08:54:52 INFO  StrimziPodSetController:571 - Informers are in-sync
+2025-03-17 08:54:53 INFO  StrimziPodSetController:389 - Reconciliation #1(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): StrimziPodSet will be reconciled
+2025-03-17 08:54:53 INFO  StrimziPodSetController:425 - Reconciliation #1(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): reconciled
+2025-03-17 08:54:53 INFO  StrimziPodSetController:389 - Reconciliation #2(watch) StrimziPodSet(strimzi/my-cluster-stretch2-controller): StrimziPodSet will be reconciled
+2025-03-17 08:54:53 INFO  StrimziPodSetController:425 - Reconciliation #2(watch) StrimziPodSet(strimzi/my-cluster-stretch2-controller): reconciled
+2025-03-17 08:54:53 INFO  StrimziPodSetController:389 - Reconciliation #3(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): StrimziPodSet will be reconciled
+2025-03-17 08:54:53 INFO  StrimziPodSetController:425 - Reconciliation #3(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): reconciled
+2025-03-17 08:59:49 INFO  StrimziPodSetController:389 - Reconciliation #4(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): StrimziPodSet will be reconciled
+```
+
+
+
 After making these changes, save the `ClusterServiceVersion` YAML, which will trigger a restart of the operator pod.
 
 
