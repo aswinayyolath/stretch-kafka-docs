@@ -150,7 +150,7 @@ aswinayyolath/stretchcluster:latest
 
     ✅ Optionally, we can set `STRIMZI_POD_SET_RECONCILIATION_ONLY` to true in the remote cluster operator deployment. This ensures that only the `SPS` controller runs, preventing other controllers from starting and handling other custom resources.
 
-Logs reassuring that no other operators have started other than the SPS controller:
+Logs confirming that no other operators have started except the SPS controller:
 ```bash
 2025-03-17 08:54:49 INFO  PodSecurityProviderFactory:43 - Found PodSecurityProvider io.strimzi.plugin.security.profiles.impl.BaselinePodSecurityProvider
 2025-03-17 08:54:49 INFO  PodSecurityProviderFactory:62 - Initializing PodSecurityProvider io.strimzi.plugin.security.profiles.impl.BaselinePodSecurityProvider
