@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Stretch-Cluster-Architecture/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Stretch cluster architecture - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Stretch cluster architecture";
+        var mkdocs_page_input_path = "Stretch-Cluster-Architecture.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Stretch-Cluster-Architecture/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Stretch cluster architecture</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#central-vs-member-remote-clusters">Central vs. Member (Remote) Clusters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#handling-failures">Handling failures</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Stretch cluster architecture</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="stretch-cluster-architecture">Stretch cluster architecture</h1>
+<p>In this section, we will discuss the architecture of a stretch Kafka cluster.</p>
+<p><img alt="stretch-architecture" loading="lazy" src="../image/image.png" /></p>
+<p>The stretch cluster design extends the Strimzi Kafka operator to support the distribution of brokers and controllers across multiple Kubernetes clusters. The primary goal is to enhance the high availability of the Kafka data plane.</p>
+<p>The above diagram outlines the high-level topology and design concepts for such a deployment. Stretch Kafka clusters require multiple Kubernetes clusters: users can configure any number of clusters, but for simplicity, the diagram illustrates a three-cluster setup.</p>
+<p>Kafka clusters should be deployed in environments that allow low-latency communication between brokers and controllers. Stretch Kafka clusters are best suited for data centers or availability zones within a single region. They should not be deployed across geographically distant regions where high latency could degrade performance.</p>
+<h2 id="central-vs-member-remote-clusters">Central vs. Member (Remote) Clusters</h2>
+<p>In a stretch cluster setup:</p>
+<ul>
+<li><code>Kafka</code> and <code>KafkaNodePool</code> Custom Resources (CRs) are applied in a single Kubernetes cluster, known as the "central" cluster.</li>
+<li>The Cluster Operator (CO) runs in the central cluster and is responsible for creating Kubernetes resources required to bring up Kafka broker and controller pods in member (remote) clusters.</li>
+<li>Cluster operators must be deployed in all Kubernetes clusters.<ul>
+<li>The cluster operator in the central cluster manages all required resources across clusters.</li>
+<li>The cluster operator in remote clusters ensures that Kafka pods are restarted if they crash.</li>
+</ul>
+</li>
+</ul>
+<h2 id="handling-failures">Handling failures</h2>
+<p>The stretch cluster architecture ensures fault tolerance even if one or more Kubernetes clusters experience an outage. If a remote cluster fails, the remaining clusters continue serving Kafka clients.</p>
+<p>Additionally, if the central cluster goes down, Kafka operations remain unaffected, as the Kafka pods in the remaining clusters continue to function and serve clients without disruption.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../building-strimzi-for-stretch-cluster/" class="btn btn-neutral float-left" title="Building Strimzi Kafka operator for stretch clusters"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Deploying-Strimzi-in-Stretch-Mode/" class="btn btn-neutral float-right" title="Deploying Strimzi in Stretch Mode">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../building-strimzi-for-stretch-cluster/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Deploying-Strimzi-in-Stretch-Mode/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

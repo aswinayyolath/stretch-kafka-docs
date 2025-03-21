@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Stretch Cluster using Strimzi";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Stretch Cluster using Strimzi</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview-of-stretch-kafka-clusters">Overview of stretch Kafka clusters</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#what-is-a-stretch-kafka-cluster">What is a stretch Kafka cluster?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#key-benefits-of-stretch-kafka-clusters">Key benefits of stretch Kafka clusters</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#deployment-considerations">Deployment considerations</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cloud-native-cross-cluster-communication-technologies">Cloud native cross-cluster communication technologies</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#challenges-in-multi-cluster-kafka-deployment">Challenges in multi-cluster Kafka deployment</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#why-submariner">Why Submariner?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#why-cilium">Why Cilium?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#which-one-to-choose">Which one to choose?</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Stretch Cluster using Strimzi</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="stretch-cluster-using-strimzi">Stretch Cluster using Strimzi</h1>
+<p>Apache Kafka is widely used for high-throughput, real-time data streaming, but deploying it across multiple Kubernetes clusters presents unique challenges. A Stretch Kafka Cluster is a deployment model where Kafka brokers and controllers are distributed across multiple Kubernetes clusters while maintaining a single logical Kafka cluster. This enables improved fault tolerance, scalability, and disaster recovery while keeping latency low.</p>
+<p>This documentation provides step-by-step guidance on setting up a Stretch Kafka Cluster using Submariner or Cilium for cross-cluster networking. The goal is to enable seamless communication between Kafka brokers and controllers running in different Kubernetes clusters, ensuring high availability and resilience.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>🚨 This not an offically supported Strimzi feature or documentation.🚨</p>
+</div>
+<h2 id="overview-of-stretch-kafka-clusters">Overview of stretch Kafka clusters</h2>
+<h3 id="what-is-a-stretch-kafka-cluster">What is a stretch Kafka cluster?</h3>
+<p>A Stretch Kafka Cluster extends a single Kafka deployment across multiple Kubernetes clusters. Unlike a standard Kafka deployment, which runs within a single Kubernetes cluster, a stretch cluster allows brokers and controllers to be distributed across multiple clusters while functioning as a unified Kafka instance.</p>
+<h3 id="key-benefits-of-stretch-kafka-clusters">Key benefits of stretch Kafka clusters</h3>
+<ul>
+<li><strong>High Availability and Disaster Recovery</strong>: If one Kubernetes cluster fails, Kafka continues to operate using nodes in the remaining K8s clusters.</li>
+<li><strong>Scalability</strong>: Kafka brokers can be added across multiple K8s clusters to handle increasing workloads.</li>
+<li><strong>Optimized Workload Distribution</strong>: Workloads can be balanced across different K8s clusters for improved resource utilization.</li>
+</ul>
+<h3 id="deployment-considerations">Deployment considerations</h3>
+<ul>
+<li><strong>Low-Latency Networking</strong>: Kafka requires low-latency communication. Stretch clusters should be deployed in data centers or availability zones within a single region, avoiding intercontinental deployments.</li>
+<li><strong>KRaft-based Deployment</strong> This stretch cluster implementation requires KRaft as both Strimzi and Kafka are transitioning away from Zookeeper.</li>
+</ul>
+<h2 id="cloud-native-cross-cluster-communication-technologies">Cloud native cross-cluster communication technologies</h2>
+<h3 id="challenges-in-multi-cluster-kafka-deployment">Challenges in multi-cluster Kafka deployment</h3>
+<p>Kafka brokers and controllers need stable and low-latency communication across clusters. However, Kubernetes clusters are isolated environments, making cross-cluster networking complex. Some of the key challenges include:</p>
+<ul>
+<li><strong>Service discovery</strong>: Brokers in one cluster need to discover and communicate with brokers in another cluster.</li>
+<li><strong>Network connectivity</strong>: Kubernetes clusters usually have separate network overlays, preventing direct pod-to-pod communication.</li>
+<li><strong>Security</strong>: Ensuring secure cross-cluster communication is critical to prevent unauthorized access.</li>
+</ul>
+<h3 id="why-submariner">Why Submariner?</h3>
+<p>Submariner is a CNCF project that provides secure cross-cluster networking for Kubernetes. It enables:</p>
+<ul>
+<li><strong>Direct pod-to-pod connectivity</strong>: Allowing Kafka brokers and controllers to communicate seamlessly.</li>
+<li><strong>Service discovery across Kubernetes cluster boundaries</strong>: Kafka services become reachable from any cluster.</li>
+<li><strong>Secure communication</strong>: Using IPsec, WireGuard, or VXLAN for encrypted cross-cluster traffic.</li>
+</ul>
+<h3 id="why-cilium">Why Cilium?</h3>
+<p>Cilium is an eBPF-based networking solution that enhances Kubernetes security and observability. It provides:</p>
+<ul>
+<li><strong>Transparent multi-cluster networking</strong>: Using Cilium ClusterMesh for service discovery and connectivity.</li>
+<li><strong>Enhanced security</strong>: Enforcing fine-grained security policies across clusters.</li>
+<li><strong>Performance optimization</strong>: Using eBPF for high-performance packet processing.</li>
+</ul>
+<h3 id="which-one-to-choose">Which one to choose?</h3>
+<p>Both Submariner and Cilium offer cross-cluster networking, but they cater to different use cases:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Submariner</th>
+<th>Cilium</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Best for</td>
+<td>Hybrid and multi-cloud deployments</td>
+<td>Kubernetes-native networking</td>
+</tr>
+<tr>
+<td>Connectivity</td>
+<td>Pod-to-pod networking via tunnels</td>
+<td>Transparent multi-cluster service mesh</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>IPsec/WireGuard encryption</td>
+<td>eBPF-based security policies</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="setting-up-submariner/" class="btn btn-neutral float-right" title="Setting up Submariner">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+      <span><a href="setting-up-submariner/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2025-03-21 08:21:08.020842+00:00
+-->

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Testing-cluster-failover/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Cluster Failover Testing - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Cluster Failover Testing";
+        var mkdocs_page_input_path = "Testing-cluster-failover.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Testing-cluster-failover/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Cluster Failover Testing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#objective">Objective</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#cluster-setup">Cluster setup</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cluster-configurations">Cluster Configurations</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#central-cluster-calico-1">Central Cluster (calico-1)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#stretch-cluster-1-calico-2">Stretch Cluster 1 (calico-2)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#stretch-cluster-2-calico-3">Stretch Cluster 2 (calico-3)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#listing-the-metadata-quorum">Listing the metadata quorum</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#topic-creation-and-message-testing">Topic Creation and Message Testing</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#producing-and-consuming-messages-from-the-topic">Producing and consuming messages from the topic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#simulating-central-cluster-failure">Simulating Central Cluster Failure</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#testing-if-we-can-produce-and-consume-with-the-other-two-clusters">Testing if we can produce and consume with the other two clusters</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#checking-if-leader-election-elected-new-partition-leaders">Checking if leader election elected new partition leaders</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#recovering-the-central-cluster">Recovering the central cluster</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#testing-if-the-isrs-come-back-from-the-central-clusters">Testing if the ISR's come back from the central clusters</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#interpretation-of-results">Interpretation of Results</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Cluster Failover Testing</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="cluster-failover-testing">Cluster Failover Testing</h1>
+<h2 id="objective">Objective</h2>
+<p>This test simulates a scenario in which the central cluster goes down. It evaluates the behavior of Kafka topics, leader election, in-sync replicas (ISRs), and how a stretched Kafka cluster handles failover. After testing the failover, the central cluster is recovered to determine if the old state is restored.</p>
+<h3 id="cluster-setup">Cluster setup</h3>
+<p>We have three Kubernetes clusters with a stretched Kafka deployment across them.</p>
+<h2 id="cluster-configurations">Cluster Configurations</h2>
+<h3 id="central-cluster-calico-1">Central Cluster (calico-1)</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-1<span class="w"> </span>-n<span class="w"> </span>strimzi
+NAME<span class="w">                                        </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+my-cluster-broker-0<span class="w">                         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-broker-1<span class="w">                         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-broker-2<span class="w">                         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-controller-3<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-controller-4<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-controller-5<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+strimzi-cluster-operator-5b7b9d9bf6-w4hxl<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+</code></pre></div>
+<h3 id="stretch-cluster-1-calico-2">Stretch Cluster 1 (calico-2)</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-2<span class="w"> </span>-n<span class="w"> </span>strimzi
+NAME<span class="w">                                        </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+my-cluster-stretch1-broker-6<span class="w">                </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch1-broker-7<span class="w">                </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch1-broker-8<span class="w">                </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch1-controller-10<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch1-controller-11<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch1-controller-9<span class="w">            </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+strimzi-cluster-operator-6d7db9dd95-k5m24<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+</code></pre></div>
+<h3 id="stretch-cluster-2-calico-3">Stretch Cluster 2 (calico-3)</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-3<span class="w"> </span>-n<span class="w"> </span>strimzi
+NAME<span class="w">                                        </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+my-cluster-stretch2-broker-12<span class="w">               </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch2-broker-13<span class="w">               </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch2-broker-14<span class="w">               </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch2-controller-15<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch2-controller-16<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+my-cluster-stretch2-controller-17<span class="w">           </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+strimzi-cluster-operator-7966fb9659-zqfmv<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>23h
+</code></pre></div>
+<p>The central cluster contains the Kafka and KafkaNodePool CRs:
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>kafka<span class="w"> </span>-n<span class="w"> </span>strimzi<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-1
+NAME<span class="w">         </span>DESIRED<span class="w"> </span>KAFKA<span class="w"> </span>REPLICAS<span class="w">   </span>DESIRED<span class="w"> </span>ZK<span class="w"> </span>REPLICAS<span class="w">   </span>READY<span class="w">   </span>METADATA<span class="w"> </span>STATE<span class="w">   </span>WARNINGS
+my-cluster
+$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>kafkanodepool<span class="w"> </span>-n<span class="w"> </span>strimzi<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-1
+NAME<span class="w">                  </span>DESIRED<span class="w"> </span>REPLICAS<span class="w">   </span>ROLES<span class="w">            </span>NODEIDS
+broker<span class="w">                </span><span class="m">3</span><span class="w">                  </span><span class="o">[</span><span class="s2">&quot;broker&quot;</span><span class="o">]</span><span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2<span class="o">]</span>
+controller<span class="w">            </span><span class="m">3</span><span class="w">                  </span><span class="o">[</span><span class="s2">&quot;controller&quot;</span><span class="o">]</span><span class="w">   </span><span class="o">[</span><span class="m">3</span>,4,5<span class="o">]</span>
+stretch1-broker<span class="w">       </span><span class="m">3</span><span class="w">                  </span><span class="o">[</span><span class="s2">&quot;broker&quot;</span><span class="o">]</span><span class="w">       </span><span class="o">[</span><span class="m">6</span>,7,8<span class="o">]</span>
+stretch1-controller<span class="w">   </span><span class="m">3</span><span class="w">                  </span><span class="o">[</span><span class="s2">&quot;controller&quot;</span><span class="o">]</span><span class="w">   </span><span class="o">[</span><span class="m">9</span>,10,11<span class="o">]</span>
+stretch2-broker<span class="w">       </span><span class="m">3</span><span class="w">                  </span><span class="o">[</span><span class="s2">&quot;broker&quot;</span><span class="o">]</span><span class="w">       </span><span class="o">[</span><span class="m">12</span>,13,14<span class="o">]</span>
+stretch2-controller<span class="w">   </span><span class="m">3</span><span class="w">                  </span><span class="o">[</span><span class="s2">&quot;controller&quot;</span><span class="o">]</span><span class="w">   </span><span class="o">[</span><span class="m">15</span>,16,17<span class="o">]</span>
+</code></pre></div></p>
+<h3 id="listing-the-metadata-quorum">Listing the metadata quorum</h3>
+<p>Checking if the metadata reflects all brokers and controllers across clusters:
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-broker-0<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-metadata-quorum.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>describe<span class="w"> </span>--status
+ClusterId:<span class="w">              </span>1RYWwDxMT8mT0lpiqtc69w
+LeaderId:<span class="w">               </span><span class="m">11</span>
+LeaderEpoch:<span class="w">            </span><span class="m">195814</span>
+HighWatermark:<span class="w">          </span><span class="m">168406</span>
+MaxFollowerLag:<span class="w">         </span><span class="m">0</span>
+MaxFollowerLagTimeMs:<span class="w">   </span><span class="m">54</span>
+CurrentVoters:<span class="w">          </span><span class="o">[</span><span class="m">16</span>,17,3,4,5,9,10,11,15<span class="o">]</span>
+CurrentObservers:<span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2,6,7,8,12,13,14<span class="o">]</span>
+</code></pre></div></p>
+<h2 id="topic-creation-and-message-testing">Topic Creation and Message Testing</h2>
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-broker-0<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-topics.sh<span class="w"> </span>--create<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--replication-factor<span class="w"> </span><span class="m">6</span><span class="w"> </span>--partitions<span class="w"> </span><span class="m">6</span><span class="w"> </span>--topic<span class="w"> </span>failover-test
+Created<span class="w"> </span>topic<span class="w"> </span>failover-test.
+</code></pre></div>
+<p>Describing the topics shows that partition 4 and 5 have leaders from the central cluster and partition's all ISRs contains all brokers from the central cluster.
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-broker-0<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test
+Topic:<span class="w"> </span>failover-test<span class="w">    </span>TopicId:<span class="w"> </span>7U-yMkfgT1GfJRY-DoyEhQ<span class="w"> </span>PartitionCount:<span class="w"> </span><span class="m">6</span><span class="w">   </span>ReplicationFactor:<span class="w"> </span><span class="m">6</span><span class="w">    </span>Configs:<span class="w"> </span>min.insync.replicas<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">8</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1<span class="w">    </span>Isr:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2<span class="w">    </span>Isr:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">13</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6<span class="w"> </span>Isr:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6<span class="w">  </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">3</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">14</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">14</span>,0,1,2,6,7<span class="w">  </span>Isr:<span class="w"> </span><span class="m">14</span>,0,1,2,6,7<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">4</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">0</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">0</span>,1,2,6,7,8<span class="w">   </span>Isr:<span class="w"> </span><span class="m">0</span>,1,2,6,7,8<span class="w">    </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">5</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">1</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">1</span>,2,6,7,8,12<span class="w">  </span>Isr:<span class="w"> </span><span class="m">1</span>,2,6,7,8,12<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+</code></pre></div></p>
+<h3 id="producing-and-consuming-messages-from-the-topic">Producing and consuming messages from the topic</h3>
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-broker-0<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-console-producer.sh<span class="w"> </span>--bootstrap-server<span class="w">  </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test
+&gt;asdfasdf
+&gt;this<span class="w"> </span>is<span class="w"> </span>stretch
+&gt;sending<span class="w"> </span>data<span class="w"> </span>from<span class="w"> </span>one<span class="w"> </span>cluster<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>other
+&gt;Hello<span class="w"> </span>Kafka
+&gt;pushing<span class="w"> </span>enough<span class="w"> </span>messages<span class="w"> </span>to<span class="w"> </span>kafka<span class="w"> </span>cluster
+&gt;Hello<span class="w"> </span>world
+&gt;Testing
+&gt;Testing<span class="w"> </span>asdf
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-stretch1-broker-8<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-console-consumer.sh<span class="w"> </span>--bootstrap-server<span class="w">  </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test
+asdfasdf
+this<span class="w"> </span>is<span class="w"> </span>stretch
+sending<span class="w"> </span>data<span class="w"> </span>from<span class="w"> </span>one<span class="w"> </span>cluster<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>other
+Hello<span class="w"> </span>Kafka
+pushing<span class="w"> </span>enough<span class="w"> </span>messages<span class="w"> </span>to<span class="w"> </span>kafka<span class="w"> </span>cluster
+Hello<span class="w"> </span>world
+Testing
+Testing<span class="w"> </span>asdf
+^CProcessed<span class="w"> </span>a<span class="w"> </span>total<span class="w"> </span>of<span class="w"> </span><span class="m">8</span><span class="w"> </span>messages
+</code></pre></div>
+<h3 id="simulating-central-cluster-failure">Simulating Central Cluster Failure</h3>
+<p>Manually shutting down the central cluster to simulate a cluster failure
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-1<span class="w"> </span>-n<span class="w"> </span>strimzi<span class="w"> </span>-v<span class="o">=</span><span class="m">8</span>
+I0313<span class="w"> </span><span class="m">13</span>:57:19.830013<span class="w">   </span><span class="m">14803</span><span class="w"> </span>loader.go:395<span class="o">]</span><span class="w"> </span>Config<span class="w"> </span>loaded<span class="w"> </span>from<span class="w"> </span>file:<span class="w">  </span>calico-1
+I0313<span class="w"> </span><span class="m">13</span>:57:19.834745<span class="w">   </span><span class="m">14803</span><span class="w"> </span>round_trippers.go:463<span class="o">]</span><span class="w"> </span>GET<span class="w"> </span>https://9.46.88.97:6443/api/v1/namespaces/strimzi/pods?limit<span class="o">=</span><span class="m">500</span>
+I0313<span class="w"> </span><span class="m">13</span>:57:19.834762<span class="w">   </span><span class="m">14803</span><span class="w"> </span>round_trippers.go:469<span class="o">]</span><span class="w"> </span>Request<span class="w"> </span>Headers:
+I0313<span class="w"> </span><span class="m">13</span>:57:19.834768<span class="w">   </span><span class="m">14803</span><span class="w"> </span>round_trippers.go:473<span class="o">]</span><span class="w">     </span>Accept:<span class="w"> </span>application/json<span class="p">;</span><span class="nv">as</span><span class="o">=</span>Table<span class="p">;</span><span class="nv">v</span><span class="o">=</span>v1<span class="p">;</span><span class="nv">g</span><span class="o">=</span>meta.k8s.io,application/json<span class="p">;</span><span class="nv">as</span><span class="o">=</span>Table<span class="p">;</span><span class="nv">v</span><span class="o">=</span>v1beta1<span class="p">;</span><span class="nv">g</span><span class="o">=</span>meta.k8s.io,application/json
+I0313<span class="w"> </span><span class="m">13</span>:57:19.834771<span class="w">   </span><span class="m">14803</span><span class="w"> </span>round_trippers.go:473<span class="o">]</span><span class="w">     </span>User-Agent:<span class="w"> </span>kubectl1.31.1/v1.31.1<span class="w"> </span><span class="o">(</span>darwin/arm64<span class="o">)</span><span class="w"> </span>kubernetes/948afe5
+I0313<span class="w"> </span><span class="m">13</span>:57:49.837331<span class="w">   </span><span class="m">14803</span><span class="w"> </span>round_trippers.go:574<span class="o">]</span><span class="w"> </span>Response<span class="w"> </span>Status:<span class="w">  </span><span class="k">in</span><span class="w"> </span><span class="m">30002</span><span class="w"> </span>milliseconds
+I0313<span class="w"> </span><span class="m">13</span>:57:49.837405<span class="w">   </span><span class="m">14803</span><span class="w"> </span>round_trippers.go:577<span class="o">]</span><span class="w"> </span>Response<span class="w"> </span>Headers:
+I0313<span class="w"> </span><span class="m">13</span>:57:49.838573<span class="w">   </span><span class="m">14803</span><span class="w"> </span>helpers.go:264<span class="o">]</span><span class="w"> </span>Connection<span class="w"> </span>error:<span class="w"> </span>Get<span class="w"> </span>https://9.46.88.97:6443/api/v1/namespaces/strimzi/pods?limit<span class="o">=</span><span class="m">500</span>:<span class="w"> </span>dial<span class="w"> </span>tcp<span class="w"> </span><span class="m">9</span>.46.88.97:6443:<span class="w"> </span>i/o<span class="w"> </span>timeout
+Unable<span class="w"> </span>to<span class="w"> </span>connect<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>server:<span class="w"> </span>dial<span class="w"> </span>tcp<span class="w"> </span><span class="m">9</span>.46.88.97:6443:<span class="w"> </span>i/o<span class="w"> </span>timeout
+</code></pre></div></p>
+<h3 id="testing-if-we-can-produce-and-consume-with-the-other-two-clusters">Testing if we can produce and consume with the other two clusters</h3>
+<p>We're using cluster 2 and 3 to produce and consume
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-stretch2-broker-12<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-console-producer.sh<span class="w"> </span>--bootstrap-server<span class="w">  </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test
+&gt;hello<span class="w"> </span>world
+&gt;Seems<span class="w"> </span>like<span class="w"> </span>the<span class="w"> </span>data<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>lost
+</code></pre></div></p>
+<p><div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-stretch1-broker-8<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-console-consumer.sh<span class="w"> </span>--bootstrap-server<span class="w">  </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test<span class="w"> </span>--from-beginning
+asdfasdf
+this<span class="w"> </span>is<span class="w"> </span>stretch
+sending<span class="w"> </span>data<span class="w"> </span>from<span class="w"> </span>one<span class="w"> </span>cluster<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>other
+Hello<span class="w"> </span>Kafka
+pushing<span class="w"> </span>enough<span class="w"> </span>messages<span class="w"> </span>to<span class="w"> </span>kafka<span class="w"> </span>cluster
+Hello<span class="w"> </span>world
+Testing
+Testing<span class="w"> </span>asdf
+hello<span class="w"> </span>world
+Seems<span class="w"> </span>like<span class="w"> </span>the<span class="w"> </span>data<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>lost
+^CProcessed<span class="w"> </span>a<span class="w"> </span>total<span class="w"> </span>of<span class="w"> </span><span class="m">10</span><span class="w"> </span>messages
+</code></pre></div>
+Produce and consume works fine and it seems like the previously sent messages are being retrieved properly.</p>
+<h3 id="checking-if-leader-election-elected-new-partition-leaders">Checking if leader election elected new partition leaders</h3>
+<p>Partition 4 and 5 which had leaders from the failed central cluster are assigned new leaders from available cluster (cluster 2).
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-stretch2-broker-12<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test
+Topic:<span class="w"> </span>failover-test<span class="w">    </span>TopicId:<span class="w"> </span>7U-yMkfgT1GfJRY-DoyEhQ<span class="w"> </span>PartitionCount:<span class="w"> </span><span class="m">6</span><span class="w">   </span>ReplicationFactor:<span class="w"> </span><span class="m">6</span><span class="w">    </span>Configs:<span class="w"> </span>min.insync.replicas<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">8</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1<span class="w">    </span>Isr:<span class="w"> </span><span class="m">8</span>,12,14,13<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2<span class="w">    </span>Isr:<span class="w"> </span><span class="m">12</span>,14,13<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">13</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6<span class="w"> </span>Isr:<span class="w"> </span><span class="m">14</span>,6,13<span class="w">    </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">3</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">14</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">14</span>,0,1,2,6,7<span class="w">  </span>Isr:<span class="w"> </span><span class="m">14</span>,6,7<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">4</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">6</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">0</span>,1,2,6,7,8<span class="w">   </span>Isr:<span class="w"> </span><span class="m">6</span>,7,8<span class="w">  </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">5</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">6</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">1</span>,2,6,7,8,12<span class="w">  </span>Isr:<span class="w"> </span><span class="m">6</span>,7,8,12<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+</code></pre></div></p>
+<h3 id="recovering-the-central-cluster">Recovering the central cluster</h3>
+<p>Manually recovering the central cluster from failure
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>.kube<span class="w"> </span>%<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-1<span class="w"> </span>-n<span class="w"> </span>strimzi<span class="w"> </span>-w
+NAME<span class="w">                                        </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">       </span>AGE
+my-cluster-broker-0<span class="w">                         </span><span class="m">0</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m6s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-broker-1<span class="w">                         </span><span class="m">0</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m9s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>23h
+my-cluster-broker-2<span class="w">                         </span><span class="m">0</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m9s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-controller-3<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m9s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-controller-4<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m6s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-controller-5<span class="w">                     </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m9s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+strimzi-cluster-operator-5b7b9d9bf6-w4hxl<span class="w">   </span><span class="m">0</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m6s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+strimzi-cluster-operator-5b7b9d9bf6-w4hxl<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m11s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-broker-0<span class="w">                         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m12s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-broker-2<span class="w">                         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m17s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>24h
+my-cluster-broker-1<span class="w">                         </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>2m56s<span class="w"> </span>ago<span class="o">)</span><span class="w">   </span>23h
+</code></pre></div></p>
+<h3 id="testing-if-the-isrs-come-back-from-the-central-clusters">Testing if the ISR's come back from the central clusters</h3>
+<p>The brokers from the recovered cluster are getting in sync with the partitions and is being reflected in the ISRs
+<div class="highlight"><pre><span></span><code><span class="o">[</span>kafka@my-cluster-stretch2-broker-12<span class="w"> </span>kafka<span class="o">]</span>$<span class="w"> </span>bin/kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.strimzi.svc:9092<span class="w"> </span>--topic<span class="w"> </span>failover-test
+Topic:<span class="w"> </span>failover-test<span class="w">    </span>TopicId:<span class="w"> </span>7U-yMkfgT1GfJRY-DoyEhQ<span class="w"> </span>PartitionCount:<span class="w"> </span><span class="m">6</span><span class="w">   </span>ReplicationFactor:<span class="w"> </span><span class="m">6</span><span class="w">    </span>Configs:<span class="w"> </span>min.insync.replicas<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">8</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1<span class="w">    </span>Isr:<span class="w"> </span><span class="m">0</span>,14,13,12,8<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2<span class="w">    </span>Isr:<span class="w"> </span><span class="m">0</span>,14,13,2,12<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">14</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6<span class="w"> </span>Isr:<span class="w"> </span><span class="m">0</span>,14,6,13,2<span class="w">    </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">3</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">14</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">14</span>,0,1,2,6,7<span class="w">  </span>Isr:<span class="w"> </span><span class="m">0</span>,14,6,2,7<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">4</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">6</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">0</span>,1,2,6,7,8<span class="w">   </span>Isr:<span class="w"> </span><span class="m">0</span>,6,2,7,8<span class="w">  </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>failover-test<span class="w">    </span>Partition:<span class="w"> </span><span class="m">5</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">6</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">1</span>,2,6,7,8,12<span class="w">  </span>Isr:<span class="w"> </span><span class="m">6</span>,2,12,7,8<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+</code></pre></div></p>
+<h2 id="interpretation-of-results">Interpretation of Results</h2>
+<ul>
+<li>The test confirms that Kafka's metadata quorum can successfully transition leadership to available controllers when the central cluster fails.</li>
+<li>Message production and consumption remain uninterrupted, demonstrating the resilience of stretched clusters.</li>
+<li>Upon recovery, the central cluster resumes operations, reinstating previous leader assignments where possible.</li>
+<li>The system effectively handles failover and restoration, ensuring high availability and minimal downtime.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>This failover test validates the effectiveness of stretched Kafka clusters in handling central cluster failures while maintaining data integrity. </p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../testing-stretch-clusters/" class="btn btn-neutral float-left" title="Stretch cluster testing"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Testing-failover-and-resiliency/" class="btn btn-neutral float-right" title="Failover Testing">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../testing-stretch-clusters/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Testing-failover-and-resiliency/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

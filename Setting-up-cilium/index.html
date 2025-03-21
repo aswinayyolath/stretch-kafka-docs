@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Setting-up-cilium/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Setting up Cilium - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Setting up Cilium";
+        var mkdocs_page_input_path = "Setting-up-cilium.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Setting-up-cilium/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Setting up Cilium</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-1-install-cilium-on-the-first-cluster">Step 1: Install Cilium on the first cluster</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-2-copy-the-cilium-ca-to-other-clusters-for-mutual-tls">Step 2: Copy the Cilium CA to other clusters for mutual TLS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-3-install-cilium-on-the-remaining-clusters">Step 3: Install Cilium on the remaining clusters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-4-verify-the-cilium-installation">Step 4: Verify the Cilium installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-5-enabling-a-cluster-mesh">Step 5: Enabling a Cluster Mesh</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-6-verify-the-status-of-the-cluster-mesh">Step 6: Verify the status of the Cluster Mesh</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-7-connecting-the-clusters">Step 7: Connecting the clusters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-8-verify-cluster-connectivity">Step 8: Verify cluster connectivity</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#step-9-testing-pod-connectivity">Step 9: Testing pod connectivity</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#setting-up-coredns-for-multi-cluster-dns-resolution">Setting Up CoreDNS for multi-cluster DNS resolution</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#exposing-coredns-as-nodeport-service">Exposing CoreDNS as NodePort Service</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#exposing-coredns-to-all-three-clusters">Exposing CoreDNS to all three clusters</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#setting-up-coredns-configmap-to-forward-requests">Setting up CoreDNS ConfigMap to forward requests</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#editing-the-coredns-configmap">Editing the CoreDNS ConfigMap</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#check-dns-resolution-using-dig">Check DNS resolution using dig</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Setting up Cilium</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="setting-up-cilium">Setting up Cilium</h1>
+<p>This page outlines the steps required to install and configure Cilium for stretch clusters using Calico as the CNI across three Kubernetes clusters.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>A LoadBalancer address must be available for the Cilium API mesh server.</li>
+<li>Calico CNI should be installed on all clusters.</li>
+<li>Non-conflicting IP space across clusters.</li>
+</ul>
+<h2 id="step-1-install-cilium-on-the-first-cluster">Step 1: Install Cilium on the first cluster</h2>
+<div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>install<span class="w"> </span>--set<span class="w"> </span>cluster.name<span class="o">=</span>cluster1<span class="w"> </span>--set<span class="w"> </span>cluster.id<span class="o">=</span><span class="m">1</span><span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-1
+</code></pre></div>
+<h2 id="step-2-copy-the-cilium-ca-to-other-clusters-for-mutual-tls">Step 2: Copy the Cilium CA to other clusters for mutual TLS</h2>
+<p><div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-1<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>cilium-ca<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-2<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>-
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-1<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>cilium-ca<span class="w"> </span>-o<span class="w"> </span>yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-3<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>-
+</code></pre></div></p>
+<h2 id="step-3-install-cilium-on-the-remaining-clusters">Step 3: Install Cilium on the remaining clusters</h2>
+<div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>install<span class="w"> </span>--set<span class="w"> </span>cluster.name<span class="o">=</span>cluster2<span class="w"> </span>--set<span class="w"> </span>cluster.id<span class="o">=</span><span class="m">2</span><span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-2
+cilium<span class="w"> </span>install<span class="w"> </span>--set<span class="w"> </span>cluster.name<span class="o">=</span>cluster3<span class="w"> </span>--set<span class="w"> </span>cluster.id<span class="o">=</span><span class="m">3</span><span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-3
+</code></pre></div>
+<h2 id="step-4-verify-the-cilium-installation">Step 4: Verify the Cilium installation</h2>
+<p><div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-1<span class="w"> </span>--wait
+cilium<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-2<span class="w"> </span>--wait
+cilium<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-3<span class="w"> </span>--wait
+</code></pre></div>
+All 3 clusters should show all resources "OK"</p>
+<h2 id="step-5-enabling-a-cluster-mesh">Step 5: Enabling a Cluster Mesh</h2>
+<p>To enable communication between clusters, use the following command to expose the <code>ClusterMesh</code> API as a <code>LoadBalancer</code> service:
+<div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>clustermesh<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-1<span class="w"> </span>--service-type<span class="w"> </span>LoadBalancer
+cilium<span class="w"> </span>clustermesh<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-2<span class="w"> </span>--service-type<span class="w"> </span>LoadBalancer
+cilium<span class="w"> </span>clustermesh<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-3<span class="w"> </span>--service-type<span class="w"> </span>LoadBalancer
+</code></pre></div></p>
+<h2 id="step-6-verify-the-status-of-the-cluster-mesh">Step 6: Verify the status of the Cluster Mesh</h2>
+<p><div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>clustermesh<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-1<span class="w"> </span>--wait
+cilium<span class="w"> </span>clustermesh<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-2<span class="w"> </span>--wait
+cilium<span class="w"> </span>clustermesh<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-3<span class="w"> </span>--wait
+</code></pre></div>
+All three clusters should show "OK" for all resources.</p>
+<h2 id="step-7-connecting-the-clusters">Step 7: Connecting the clusters</h2>
+<div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>clustermesh<span class="w"> </span>connect<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-1<span class="w"> </span>--destination-context<span class="w"> </span>kubernetes-admin@stretch-calico-2
+cilium<span class="w"> </span>clustermesh<span class="w"> </span>connect<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-1<span class="w"> </span>--destination-context<span class="w"> </span>kubernetes-admin@stretch-calico-3
+cilium<span class="w"> </span>clustermesh<span class="w"> </span>connect<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-2<span class="w"> </span>--destination-context<span class="w"> </span>kubernetes-admin@stretch-calico-3
+</code></pre></div>
+<h2 id="step-8-verify-cluster-connectivity">Step 8: Verify cluster connectivity</h2>
+<p><div class="highlight"><pre><span></span><code>cilium<span class="w"> </span>clustermesh<span class="w"> </span>status<span class="w"> </span>--context<span class="w"> </span>kubernetes-admin@stretch-calico-2<span class="w"> </span>--wait
+</code></pre></div>
+This command should show connections to the other two clusters.</p>
+<h2 id="step-9-testing-pod-connectivity">Step 9: Testing pod connectivity</h2>
+<p>Try to ping the pods from one cluster to the other using IP address. Ideally, use and nginx server and webclient to test this connectivity.
+<br><br></p>
+<h2 id="setting-up-coredns-for-multi-cluster-dns-resolution">Setting Up CoreDNS for multi-cluster DNS resolution</h2>
+<h3 id="exposing-coredns-as-nodeport-service">Exposing CoreDNS as NodePort Service</h3>
+<p>Cilium Cluster Mesh does not provide multi-cluster DNS resolution for headless services by default. We can modify CoreDNS to enable this functionality.</p>
+<h3 id="exposing-coredns-to-all-three-clusters">Exposing CoreDNS to all three clusters</h3>
+<p>Create a NodePort service to expose CoreDNS across all three clusters:
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Service</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">k8s-app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">core-dns-nodeport</span>
+<span class="w">    </span><span class="nt">kubernetes.io/name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CoreDNS</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">core-dns-nodeport</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kube-system</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dns</span>
+<span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">53</span>
+<span class="w">    </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UDP</span>
+<span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">53</span>
+<span class="w">    </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30053</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dns-tcp</span>
+<span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">53</span>
+<span class="w">    </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TCP</span>
+<span class="w">    </span><span class="nt">targetPort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">53</span>
+<span class="w">    </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30053</span>
+<span class="w">  </span><span class="nt">selector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">k8s-app</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kube-dns</span>
+<span class="w">  </span><span class="nt">sessionAffinity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">None</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NodePort</span>
+</code></pre></div>
+Apply this service to all three clusters</p>
+<p><div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-1<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>core-dns-nodeport.yaml
+kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-2<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>core-dns-nodeport.yaml
+kubectl<span class="w"> </span>--context<span class="o">=</span>kubernetes-admin@stretch-calico-3<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>core-dns-nodeport.yaml
+</code></pre></div>
+Here, the DNS service is exposed on port 30053 of infraIP (xx.xx.xx.xx:30053).</p>
+<h3 id="setting-up-coredns-configmap-to-forward-requests">Setting up CoreDNS <code>ConfigMap</code> to forward requests</h3>
+<p>We'll use a service address convention to determine the cluster details of a pod based on its service address, such as:
+<div class="highlight"><pre><span></span><code>my-cluster-broker-100.cluster1.my-cluster-kafka-brokers.strimzi.svc.cluster.local
+</code></pre></div>
+Here, cluster1 is injected into the address to identify which DNS service should resolve it.</p>
+<h4 id="editing-the-coredns-configmap">Editing the CoreDNS <code>ConfigMap</code></h4>
+<p><div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>edit<span class="w"> </span>cm<span class="w"> </span>coredns<span class="w"> </span>-n<span class="w"> </span>kube-system<span class="w"> </span>--kubeconfig<span class="w"> </span>calico-1
+</code></pre></div>
+Set up the rules as shown:
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Corefile</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">cluster2.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster2.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">forward . x.xx.xx.34:30053 {</span>
+<span class="w">          </span><span class="no">expire 10s</span>
+<span class="w">          </span><span class="no">policy round_robin</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">cache 10</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">    </span><span class="no">cluster3.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster3.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">forward . x.xx.xx.149:30053 {</span>
+<span class="w">          </span><span class="no">expire 10s</span>
+<span class="w">          </span><span class="no">policy round_robin</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">cache 10</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">    </span><span class="no">.:53 {</span>
+<span class="w">        </span><span class="no">errors</span>
+<span class="w">        </span><span class="no">health {</span>
+<span class="w">           </span><span class="no">lameduck 5s</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">ready</span>
+<span class="w">        </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster1.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">template IN ANY clusterset.local {</span>
+<span class="w">           </span><span class="no">match &quot;(?P&lt;broker&gt;[a-zA-Z0-9-]+)\.(?P&lt;cluster&gt;[a-zA-Z0-9-]+)\.(?P&lt;service&gt;[a-zA-Z0-9-]+)\.(?P&lt;ns&gt;[a-zA-Z0-9-]+)\.svc\.clusterset\.local.$&quot;</span>
+<span class="w">           </span><span class="no">answer &quot;{{ .Name }} 60 IN CNAME {{ .Group.broker }}.{{ .Group.service }}.{{ .Group.ns }}.{{ .Group.cluster }}.svc.cluster.local&quot;</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">kubernetes cluster.local in-addr.arpa ip6.arpa {</span>
+<span class="w">           </span><span class="no">pods insecure</span>
+<span class="w">           </span><span class="no">fallthrough in-addr.arpa ip6.arpa</span>
+<span class="w">           </span><span class="no">ttl 30</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">prometheus :9153</span>
+<span class="w">        </span><span class="no">forward . /etc/resolv.conf {</span>
+<span class="w">           </span><span class="no">max_concurrent 1000</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">cache 30</span>
+<span class="w">        </span><span class="no">loop</span>
+<span class="w">        </span><span class="no">reload</span>
+<span class="w">        </span><span class="no">loadbalance</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">coredns</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kube-system</span>
+</code></pre></div></p>
+<p>Essentially, we have added:</p>
+<p><div class="highlight"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">cluster2.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">rewrite stop {</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">name substring cluster2.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">forward . x.xx.xx.34:30053 {</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">expire 10s</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">policy round_robin</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">cache 10</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="l l-Scalar l-Scalar-Plain">cluster3.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">rewrite stop {</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">name substring cluster3.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">forward . x.xx.xx.149:30053 {</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">expire 10s</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">policy round_robin</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">cache 10</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+</code></pre></div>
+When this DNS service is asked to resolve an address ending with <code>cluster2.svc.cluster.local</code>, it rewrites the string with a valid one (<code>.svc.cluster.local</code>, removing cluster2) and forwards it to the DNS service in the 2nd cluster. The forward rule is followed by ip address of the 2nd cluster to forward all request in that category to the 2nd cluster's coreDNS service. Similarly it forwards the 3rd clusters address to the 3rd cluster for resolution.</p>
+<p><br>  Another rewrite is added for the DNS to resolve it's own addresses by removing the <code>cluster1</code> part from the request and allowing normal resolution:
+<div class="highlight"><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">rewrite stop {</span>
+<span class="w">          </span><span class="l l-Scalar l-Scalar-Plain">name substring cluster1.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="l l-Scalar l-Scalar-Plain">template IN ANY clusterset.local {</span>
+<span class="w">           </span><span class="l l-Scalar l-Scalar-Plain">match &quot;(?P&lt;broker&gt;[a-zA-Z0-9-]+)\.(?P&lt;cluster&gt;[a-zA-Z0-9-]+)\.(?P&lt;service&gt;[a-zA-Z0-9-]+)\.(?P&lt;ns&gt;[a-zA-Z0-9-]+)\.svc\.clusterset\.local.$&quot;</span>
+<span class="w">           </span><span class="l l-Scalar l-Scalar-Plain">answer &quot;{{ .Name }} 60 IN CNAME {{ .Group.broker }}.{{ .Group.service }}.{{ .Group.ns }}.{{ .Group.cluster }}.svc.cluster.local&quot;</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">}</span>
+</code></pre></div></p>
+<p>The <code>ConfigMap</code> of cluster 2 is modified as shown:
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Corefile</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">cluster1.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster1.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">forward . x.xx.xx.97:30053 {</span>
+<span class="w">          </span><span class="no">expire 10s</span>
+<span class="w">          </span><span class="no">policy round_robin</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">cache 10</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">    </span><span class="no">cluster3.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster3.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">forward . x.xx.xx.149:30053 {</span>
+<span class="w">          </span><span class="no">expire 10s</span>
+<span class="w">          </span><span class="no">policy round_robin</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">cache 10</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">    </span><span class="no">.:53 {</span>
+<span class="w">        </span><span class="no">errors</span>
+<span class="w">        </span><span class="no">health {</span>
+<span class="w">           </span><span class="no">lameduck 5s</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">ready</span>
+<span class="w">        </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster2.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">template IN ANY clusterset.local {</span>
+<span class="w">           </span><span class="no">match &quot;(?P&lt;broker&gt;[a-zA-Z0-9-]+)\.(?P&lt;cluster&gt;[a-zA-Z0-9-]+)\.(?P&lt;service&gt;[a-zA-Z0-9-]+)\.(?P&lt;ns&gt;[a-zA-Z0-9-]+)\.svc\.clusterset\.local.$&quot;</span>
+<span class="w">           </span><span class="no">answer &quot;{{ .Name }} 60 IN CNAME {{ .Group.broker }}.{{ .Group.service }}.{{ .Group.ns }}.{{ .Group.cluster }}.svc.cluster.local&quot;</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">kubernetes cluster.local in-addr.arpa ip6.arpa {</span>
+<span class="w">           </span><span class="no">pods insecure</span>
+<span class="w">           </span><span class="no">fallthrough in-addr.arpa ip6.arpa</span>
+<span class="w">           </span><span class="no">ttl 30</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">prometheus :9153</span>
+<span class="w">        </span><span class="no">forward . /etc/resolv.conf {</span>
+<span class="w">           </span><span class="no">max_concurrent 1000</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">cache 30</span>
+<span class="w">        </span><span class="no">loop</span>
+<span class="w">        </span><span class="no">reload</span>
+<span class="w">        </span><span class="no">loadbalance</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">coredns</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kube-system</span>
+</code></pre></div>
+This updates sets the resolving rules in reverse. All addresses ending with <code>cluster1.svc.cluster.local</code> will modified and sent to the DNS service in the other cluster which can resolve it normally. The addresses ending with <code>cluster2.svc.cluster.local</code> will be resolved by the local DNS cluster by removing the <code>cluster2</code> part from the address. Cluster 3 addresses will be sent for resolution by cluster 3 DNS.</p>
+<p>Cluster 3's coreDNS is modified as shown:
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Corefile</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">cluster1.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster1.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">forward . x.xx.xx.97:30053 {</span>
+<span class="w">          </span><span class="no">expire 10s</span>
+<span class="w">          </span><span class="no">policy round_robin</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">cache 10</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">    </span><span class="no">cluster2.svc.cluster.local.:53 {</span>
+<span class="w">      </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster2.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">forward . x.xx.xx.34:30053 {</span>
+<span class="w">          </span><span class="no">expire 10s</span>
+<span class="w">          </span><span class="no">policy round_robin</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">      </span><span class="no">cache 10</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="w">    </span><span class="no">.:53 {</span>
+<span class="w">        </span><span class="no">errors</span>
+<span class="w">        </span><span class="no">health {</span>
+<span class="w">           </span><span class="no">lameduck 5s</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">ready</span>
+<span class="w">        </span><span class="no">rewrite stop {</span>
+<span class="w">          </span><span class="no">name substring cluster3.svc.cluster.local svc.cluster.local answer auto</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">template IN ANY clusterset.local {</span>
+<span class="w">           </span><span class="no">match &quot;(?P&lt;broker&gt;[a-zA-Z0-9-]+)\.(?P&lt;cluster&gt;[a-zA-Z0-9-]+)\.(?P&lt;service&gt;[a-zA-Z0-9-]+)\.(?P&lt;ns&gt;[a-zA-Z0-9-]+)\.svc\.clusterset\.local.$&quot;</span>
+<span class="w">           </span><span class="no">answer &quot;{{ .Name }} 60 IN CNAME {{ .Group.broker }}.{{ .Group.service }}.{{ .Group.ns }}.{{ .Group.cluster }}.svc.cluster.local&quot;</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">kubernetes cluster.local in-addr.arpa ip6.arpa {</span>
+<span class="w">           </span><span class="no">pods insecure</span>
+<span class="w">           </span><span class="no">fallthrough in-addr.arpa ip6.arpa</span>
+<span class="w">           </span><span class="no">ttl 30</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">prometheus :9153</span>
+<span class="w">        </span><span class="no">forward . /etc/resolv.conf {</span>
+<span class="w">           </span><span class="no">max_concurrent 1000</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">        </span><span class="no">cache 30</span>
+<span class="w">        </span><span class="no">loop</span>
+<span class="w">        </span><span class="no">reload</span>
+<span class="w">        </span><span class="no">loadbalance</span>
+<span class="w">    </span><span class="no">}</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ConfigMap</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">coredns</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kube-system</span>
+</code></pre></div></p>
+<h4 id="check-dns-resolution-using-dig">Check DNS resolution using <code>dig</code></h4>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>dig<span class="w"> </span>my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local<span class="w">  </span>@xx.xx.xx.xx<span class="w"> </span>-p<span class="w"> </span><span class="m">30053</span>
+
+<span class="p">;</span><span class="w"> </span>&lt;&lt;&gt;&gt;<span class="w"> </span>DiG<span class="w"> </span><span class="m">9</span>.10.6<span class="w"> </span>&lt;&lt;&gt;&gt;<span class="w"> </span>my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local<span class="w"> </span>@xx.xx.xx.xx<span class="w"> </span>-p<span class="w"> </span><span class="m">30053</span>
+<span class="p">;;</span><span class="w"> </span>global<span class="w"> </span>options:<span class="w"> </span>+cmd
+<span class="p">;;</span><span class="w"> </span>Got<span class="w"> </span>answer:
+<span class="p">;;</span><span class="w"> </span>WARNING:<span class="w"> </span>.local<span class="w"> </span>is<span class="w"> </span>reserved<span class="w"> </span><span class="k">for</span><span class="w"> </span>Multicast<span class="w"> </span>DNS
+<span class="p">;;</span><span class="w"> </span>You<span class="w"> </span>are<span class="w"> </span>currently<span class="w"> </span>testing<span class="w"> </span>what<span class="w"> </span>happens<span class="w"> </span>when<span class="w"> </span>an<span class="w"> </span>mDNS<span class="w"> </span>query<span class="w"> </span>is<span class="w"> </span>leaked<span class="w"> </span>to<span class="w"> </span>DNS
+<span class="p">;;</span><span class="w"> </span>-&gt;&gt;HEADER<span class="s">&lt;&lt;- opco</span>de:<span class="w"> </span>QUERY,<span class="w"> </span>status:<span class="w"> </span>NOERROR,<span class="w"> </span>id:<span class="w"> </span><span class="m">17247</span>
+<span class="p">;;</span><span class="w"> </span>flags:<span class="w"> </span>qr<span class="w"> </span>aa<span class="w"> </span>rd<span class="p">;</span><span class="w"> </span>QUERY:<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>ANSWER:<span class="w"> </span><span class="m">2</span>,<span class="w"> </span>AUTHORITY:<span class="w"> </span><span class="m">0</span>,<span class="w"> </span>ADDITIONAL:<span class="w"> </span><span class="m">1</span>
+<span class="p">;;</span><span class="w"> </span>WARNING:<span class="w"> </span>recursion<span class="w"> </span>requested<span class="w"> </span>but<span class="w"> </span>not<span class="w"> </span>available
+
+<span class="p">;;</span><span class="w"> </span>OPT<span class="w"> </span>PSEUDOSECTION:
+<span class="p">;</span><span class="w"> </span>EDNS:<span class="w"> </span>version:<span class="w"> </span><span class="m">0</span>,<span class="w"> </span>flags:<span class="p">;</span><span class="w"> </span>udp:<span class="w"> </span><span class="m">4096</span>
+<span class="p">;;</span><span class="w"> </span>QUESTION<span class="w"> </span>SECTION:
+<span class="p">;</span>my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local.<span class="w"> </span>IN<span class="w"> </span>A
+
+<span class="p">;;</span><span class="w"> </span>ANSWER<span class="w"> </span>SECTION:
+my-cluster-controller-4.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local.<span class="w"> </span><span class="m">10</span><span class="w"> </span>IN<span class="w"> </span>CNAME<span class="w"> </span>my-cluster-controller-4.my-cluster-kafka-brokers.strimzi.cluster1.svc.cluster.local.
+my-cluster-controller-4.my-cluster-kafka-brokers.strimzi.cluster1.svc.cluster.local.<span class="w"> </span><span class="m">10</span><span class="w"> </span>IN<span class="w"> </span>A<span class="w"> </span><span class="m">10</span>.0.1.73
+
+<span class="p">;;</span><span class="w"> </span>Query<span class="w"> </span>time:<span class="w"> </span><span class="m">270</span><span class="w"> </span>msec
+<span class="p">;;</span><span class="w"> </span>SERVER:<span class="w"> </span>xx.x.xx.xx#30053<span class="o">(</span>xx.xx.xx.xx<span class="o">)</span>
+<span class="p">;;</span><span class="w"> </span>WHEN:<span class="w"> </span>Fri<span class="w"> </span>Feb<span class="w"> </span><span class="m">07</span><span class="w"> </span><span class="m">14</span>:22:13<span class="w"> </span>IST<span class="w"> </span><span class="m">2025</span>
+<span class="p">;;</span><span class="w"> </span>MSG<span class="w"> </span>SIZE<span class="w">  </span>rcvd:<span class="w"> </span><span class="m">401</span>
+</code></pre></div>
+<p>Test with all combinations:
+<div class="highlight"><pre><span></span><code>cluster-a address -&gt; cluster-a DNS
+cluster-a address -&gt; cluster-b DNS
+cluster-a address -&gt; cluster-c DNS
+cluster-b address -&gt; cluster-a DNS
+cluster-b address -&gt; cluster-b DNS
+cluster-b address -&gt; cluster-c DNS
+cluster-c address -&gt; cluster-a DNS
+cluster-c address -&gt; cluster-b DNS
+cluster-c address -&gt; cluster-c DNS
+</code></pre></div></p>
+<p>Now proceed with installing the operator in stretch mode where the Kafka CR's <code>cross-cluster-type</code> label is set to <code>cilium</code>:
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Kafka</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">  </span><span class="nt">annotations</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/node-pools</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enabled</span>
+<span class="w">    </span><span class="nt">strimzi.io/kraft</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enabled</span>
+<span class="w">    </span><span class="nt">strimzi.io/cross-cluster-type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cilium&quot;</span><span class="w">  </span><span class="c1">#-- change this to cilium instead of submainer </span>
+</code></pre></div>
+It is not necessary to edit <code>clusterRole</code> resources because no service exports are needed when using Cilium.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../testing-submariner/" class="btn btn-neutral float-left" title="Validating the Submariner deployment"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../building-strimzi-for-stretch-cluster/" class="btn btn-neutral float-right" title="Building Strimzi Kafka operator for stretch clusters">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../testing-submariner/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../building-strimzi-for-stretch-cluster/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

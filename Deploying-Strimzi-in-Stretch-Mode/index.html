@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Deploying-Strimzi-in-Stretch-Mode/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Deploying Strimzi in Stretch Mode - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Deploying Strimzi in Stretch Mode";
+        var mkdocs_page_input_path = "Deploying-Strimzi-in-Stretch-Mode.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Deploying-Strimzi-in-Stretch-Mode/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Deploying Strimzi in Stretch Mode</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#deploying-stretch-clusters-in-openshift">Deploying stretch clusters in OpenShift</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#updating-kafkanodepool-crd">Updating KafkaNodePool CRD</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#updating-clusterrole-for-submariner">Updating ClusterRole for Submariner</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#creating-kubernetes-secrets-for-remote-cluster-access">Creating Kubernetes secrets for remote cluster access</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#updating-the-operator-image">Updating the operator image</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#updating-environment-variables">Updating environment variables</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#applying-kafka-and-kafkanodepool-crs-in-the-central-cluster">Applying Kafka and KafkaNodePool CRs in the central cluster</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#how-it-works">How it works</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#speccluster-in-kafkanodepool-knp">spec.cluster in KafkaNodePool (KNP)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#submariner-cluster-id">Submariner cluster ID</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#cross-cluster-type">Cross-cluster type</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#strimzi_network_policy_generation">STRIMZI_NETWORK_POLICY_GENERATION</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#strimzi_stretch_mode">STRIMZI_STRETCH_MODE</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#summary">Summary</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#central-cluster-considerations">Central cluster considerations</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#deploying-stretch-clusters-in-kubernetes">Deploying stretch clusters in Kubernetes</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#installing-strimzi">Installing Strimzi</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#extract-the-downloaded-file">Extract the downloaded file</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#granting-permissions-to-the-cluster-operator">Granting permissions to the cluster operator</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#deploy-crds-and-rbac-resources">Deploy CRDs and RBAC resources</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#remaining-steps">Remaining steps</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Deploying Strimzi in Stretch Mode</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="deploying-strimzi-in-stretch-mode">Deploying Strimzi in Stretch Mode</h1>
+<p>This section details how to deploy the Strimzi Kafka Operator in Stretch Mode. The document is divided into two sections:</p>
+<ul>
+<li>Deploying stretch clusters in OpenShift Container Platform (OCP)</li>
+<li>Deploying stretch clusters in Kubernetes</li>
+</ul>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/NEPgtXD6voA?si=xrKa_zrzDqhW-B3C" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<p>Let's first look at how to deploy a stretch cluster with OpenShift.</p>
+<h2 id="deploying-stretch-clusters-in-openshift">Deploying stretch clusters in OpenShift</h2>
+<p>Deploying a stretch cluster in OpenShift is relatively straightforward. Follow these steps:</p>
+<ol>
+<li>Navigate to the <code>OperatorHub</code> in the OpenShift console.</li>
+<li>Search for Strimzi and install version <strong><code>0.44.0</code></strong> in your namespace. (You must install Strimzi in all Kubernetes clusters that are part of the stretch cluster deployment.)</li>
+<li>Set <code>Update approval</code> to <code>Manual</code> to prevent OpenShift from automatically updating the operator to the latest stable version.</li>
+<li>Manually approve the Install Plan and wait a few minutes for the operator to install. (Ensure that namespaces have the same name across all Kubernetes clusters.)</li>
+</ol>
+<h3 id="updating-kafkanodepool-crd">Updating KafkaNodePool CRD</h3>
+<p>Once the operator is installed, update the <code>KafkaNodePool</code> CRD by adding the following under <code>.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties</code>. (For prototype testing, update the CRD only in the central cluster.)</p>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="nt">cluster</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Target Kubernetes Cluster where SPS will be created.</span>
+</code></pre></div>
+<p>You can edit the CRD using the command:</p>
+<div class="highlight"><pre><span></span><code>oc<span class="w"> </span>edit<span class="w"> </span>crd<span class="w"> </span>kafkanodepools.kafka.strimzi.io
+</code></pre></div>
+<p>Alternatively, you can update it using the OpenShift console:</p>
+<ol>
+<li>Navigate to <code>Administration</code> → <code>CustomResourceDefinitions</code>.</li>
+<li>Select <code>KafkaNodePool</code> and edit the schema.</li>
+</ol>
+<h3 id="updating-clusterrole-for-submariner">Updating ClusterRole for Submariner</h3>
+<p>If <code>Submariner</code> is used for pod-to-pod communication, update the <code>strimzi-cluster-operator</code> <code>ClusterRole</code> to allow the creation of the <code>ServiceExport</code> CR (This update is required only in the central cluster). The <code>ServiceExport</code> CR specifies which services should be exported outside the cluster. More details can be found <a href="https://multicluster.sigs.k8s.io/api-types/service-export/">here</a>.</p>
+<p>The updated <code>ClusterRole</code> should look like this:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterRole</span>
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strimzi-cluster-operator.-ty2SyQjgGwxj3ajI1Cg98uIuqXKKouGnWYwjG</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">&lt;REDACTED&gt;</span>
+<span class="nt">rules</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">verbs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">list</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">watch</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">create</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">delete</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patch</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">update</span>
+<span class="w">    </span><span class="nt">apiGroups</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multicluster.x-k8s.io</span><span class="w"> </span><span class="c1"># ----&gt; Add this</span>
+<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clusterrolebindings</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">serviceexports</span><span class="w"> </span><span class="c1">## ----&gt; Add this</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">verbs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get</span>
+<span class="w">    </span><span class="nt">apiGroups</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">storage.k8s.io</span>
+<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">storageclasses</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">verbs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">list</span>
+<span class="w">    </span><span class="nt">apiGroups</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nodes</span>
+</code></pre></div>
+<h3 id="creating-kubernetes-secrets-for-remote-cluster-access">Creating Kubernetes secrets for remote cluster access</h3>
+<p>In the central cluster, create Kubernetes secrets to connect to the remote clusters. This is necessary because all CRs (<code>Kafka</code> and <code>KafkaNodePool</code>) are created in the central cluster, leading to Kafka pod and related resource creation in the remote clusters.</p>
+<ol>
+<li>
+<p>Create files containing Kubeconfig data for each remote cluster (for example):</p>
+<ul>
+<li>cluster-a-config (for Kubernetes cluster cluster-a)</li>
+<li>cluster-b-config (for Kubernetes cluster cluster-b)</li>
+</ul>
+</li>
+<li>
+<p>Create secrets in the central cluster:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>secret-cluster-a<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--from-file<span class="o">=</span><span class="nv">kubeconfig</span><span class="o">=</span>cluster-a-config
+secret/secret-cluster-a<span class="w"> </span>created
+
+🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>secret-cluster-b<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--from-file<span class="o">=</span><span class="nv">kubeconfig</span><span class="o">=</span>cluster-b-config
+secret/secret-cluster-b<span class="w"> </span>created
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>✅ The secret name does not matter. Use the same secret name in the <code>STRIMZI_K8S_CLUSTERS</code> environment variable.</p>
+</div>
+<h3 id="updating-the-operator-image">Updating the operator image</h3>
+<ol>
+<li>Navigate to <code>Installed Operators</code> in the OpenShift console.</li>
+<li>Select Strimzi and open the YAML view.</li>
+<li>Locate the operator image:</li>
+</ol>
+<p><div class="highlight"><pre><span></span><code>quay.io/strimzi/operator@sha256:b07b81f7e282dea2e4e29a7c93cfdd911d4715a5c32fe4c4e3d7c71cba3091e8
+</code></pre></div>
+4. Replace it with your built image. If using a pre-built image, replace the default <code>0.44.0</code> image with:</p>
+<div class="highlight"><pre><span></span><code>aswinayyolath/stretchcluster:latest
+</code></pre></div>
+<h3 id="updating-environment-variables">Updating environment variables</h3>
+<p><strong>Central cluster</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_STRETCH_MODE</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_K8S_CLUSTERS</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">cluster-a.url=&lt;cluster-a URL&gt;</span>
+<span class="w">      </span><span class="no">cluster-a.secret=secret-cluster-a</span>
+<span class="w">      </span><span class="no">cluster-b.url=&lt;cluster-b URL&gt;</span>
+<span class="w">      </span><span class="no">cluster-b.secret=secret-cluster-b</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_NETWORK_POLICY_GENERATION</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;false&#39;</span>
+</code></pre></div>
+<p><strong>Remote clusters</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_STRETCH_MODE</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>✅ Optionally, we can set <code>STRIMZI_POD_SET_RECONCILIATION_ONLY</code> to true in the remote cluster operator deployment. This ensures that only the <code>SPS</code> controller runs, preventing other controllers from starting and handling other custom resources.</p>
+</div>
+<p>Logs confirming that no other operators have started except the SPS controller:
+<div class="highlight"><pre><span></span><code><span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>PodSecurityProviderFactory:43<span class="w"> </span>-<span class="w"> </span>Found<span class="w"> </span>PodSecurityProvider<span class="w"> </span>io.strimzi.plugin.security.profiles.impl.BaselinePodSecurityProvider
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>PodSecurityProviderFactory:62<span class="w"> </span>-<span class="w"> </span>Initializing<span class="w"> </span>PodSecurityProvider<span class="w"> </span>io.strimzi.plugin.security.profiles.impl.BaselinePodSecurityProvider
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>ClusterOperator:86<span class="w"> </span>-<span class="w"> </span>Creating<span class="w"> </span>ClusterOperator<span class="w"> </span><span class="k">for</span><span class="w"> </span>namespace<span class="w"> </span>strimzi
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>ClusterOperator:100<span class="w"> </span>-<span class="w"> </span>Starting<span class="w"> </span>ClusterOperator<span class="w"> </span><span class="k">for</span><span class="w"> </span>namespace<span class="w"> </span>strimzi
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>ClusterOperator:154<span class="w"> </span>-<span class="w"> </span>--Stretch<span class="w"> </span>Mode<span class="w"> </span>value<span class="w"> </span><span class="k">in</span><span class="w"> </span>ClusterOperator--<span class="w"> </span><span class="nb">true</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:594<span class="w"> </span>-<span class="w"> </span>Starting<span class="w"> </span>the<span class="w"> </span>StrimziPodSet<span class="w"> </span>controller
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>ClusterOperator:137<span class="w"> </span>-<span class="w"> </span>Setting<span class="w"> </span>up<span class="w"> </span>periodic<span class="w"> </span>reconciliation<span class="w"> </span><span class="k">for</span><span class="w"> </span>namespace<span class="w"> </span>strimzi
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:563<span class="w"> </span>-<span class="w"> </span>Starting<span class="w"> </span>StrimziPodSet<span class="w"> </span>controller<span class="w"> </span><span class="k">for</span><span class="w"> </span>namespace<span class="w"> </span>strimzi
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>Main:193<span class="w"> </span>-<span class="w"> </span>Cluster<span class="w"> </span>Operator<span class="w"> </span>verticle<span class="w"> </span>started<span class="w"> </span><span class="k">in</span><span class="w"> </span>namespace<span class="w"> </span>strimzi<span class="w"> </span>without<span class="w"> </span>label<span class="w"> </span>selector
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>WARN<span class="w">  </span>VersionUsageUtils:60<span class="w"> </span>-<span class="w"> </span>The<span class="w"> </span>client<span class="w"> </span>is<span class="w"> </span>using<span class="w"> </span>resource<span class="w"> </span><span class="nb">type</span><span class="w"> </span><span class="s1">&#39;strimzipodsets&#39;</span><span class="w"> </span>with<span class="w"> </span>unstable<span class="w"> </span>version<span class="w"> </span><span class="s1">&#39;v1beta2&#39;</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>WARN<span class="w">  </span>VersionUsageUtils:60<span class="w"> </span>-<span class="w"> </span>The<span class="w"> </span>client<span class="w"> </span>is<span class="w"> </span>using<span class="w"> </span>resource<span class="w"> </span><span class="nb">type</span><span class="w"> </span><span class="s1">&#39;kafkas&#39;</span><span class="w"> </span>with<span class="w"> </span>unstable<span class="w"> </span>version<span class="w"> </span><span class="s1">&#39;v1beta2&#39;</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>WARN<span class="w">  </span>VersionUsageUtils:60<span class="w"> </span>-<span class="w"> </span>The<span class="w"> </span>client<span class="w"> </span>is<span class="w"> </span>using<span class="w"> </span>resource<span class="w"> </span><span class="nb">type</span><span class="w"> </span><span class="s1">&#39;kafkaconnects&#39;</span><span class="w"> </span>with<span class="w"> </span>unstable<span class="w"> </span>version<span class="w"> </span><span class="s1">&#39;v1beta2&#39;</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>WARN<span class="w">  </span>VersionUsageUtils:60<span class="w"> </span>-<span class="w"> </span>The<span class="w"> </span>client<span class="w"> </span>is<span class="w"> </span>using<span class="w"> </span>resource<span class="w"> </span><span class="nb">type</span><span class="w"> </span><span class="s1">&#39;kafkamirrormaker2s&#39;</span><span class="w"> </span>with<span class="w"> </span>unstable<span class="w"> </span>version<span class="w"> </span><span class="s1">&#39;v1beta2&#39;</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:49<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:566<span class="w"> </span>-<span class="w"> </span>Waiting<span class="w"> </span><span class="k">for</span><span class="w"> </span>informers<span class="w"> </span>to<span class="w"> </span>sync
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:52<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:571<span class="w"> </span>-<span class="w"> </span>Informers<span class="w"> </span>are<span class="w"> </span><span class="k">in</span>-sync
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:53<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:389<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#1(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): StrimziPodSet will be reconciled</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:53<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:425<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#1(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): reconciled</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:53<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:389<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#2(watch) StrimziPodSet(strimzi/my-cluster-stretch2-controller): StrimziPodSet will be reconciled</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:53<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:425<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#2(watch) StrimziPodSet(strimzi/my-cluster-stretch2-controller): reconciled</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:53<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:389<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#3(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): StrimziPodSet will be reconciled</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:54:53<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:425<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#3(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): reconciled</span>
+<span class="m">2025</span>-03-17<span class="w"> </span><span class="m">08</span>:59:49<span class="w"> </span>INFO<span class="w">  </span>StrimziPodSetController:389<span class="w"> </span>-<span class="w"> </span>Reconciliation<span class="w"> </span><span class="c1">#4(watch) StrimziPodSet(strimzi/my-cluster-stretch2-broker): StrimziPodSet will be reconciled</span>
+</code></pre></div></p>
+<p>After making these changes, save the <code>ClusterServiceVersion</code> YAML, which will trigger a restart of the operator pod.</p>
+<h3 id="applying-kafka-and-kafkanodepool-crs-in-the-central-cluster">Applying <code>Kafka</code> and <code>KafkaNodePool</code> CRs in the central cluster</h3>
+<p>Once the setup is complete, apply the <code>Kafka</code> and <code>KafkaNodePool</code> CRs in the central cluster. Below are example CRs:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">#Central Cluster CR (spec.cluster is missing in these CRs)</span>
+<span class="c1">#----------------------------------------------------------</span>
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KafkaNodePool</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">controller</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/submariner-cluster-id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cluster1&quot;</span><span class="w"> </span><span class="c1">#-------&gt; submariner-cluster-id will be used in controller.quorum.voters and advertised.listeners to enable cross cluster communication  </span>
+<span class="nt">spec</span><span class="p">:</span><span class="w">                                            </span><span class="c1">#-------&gt; In addition to this every controller and broker Pods will have a SANS entry with the Submariner exported DNS name                       </span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">  </span><span class="nt">roles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">controller</span>
+<span class="w">  </span><span class="nt">storage</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jbod</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<span class="w">        </span><span class="nt">kraftMetadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shared</span>
+<span class="nn">---</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KafkaNodePool</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broker</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/submariner-cluster-id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cluster1&quot;</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">  </span><span class="nt">roles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broker</span>
+<span class="w">  </span><span class="nt">storage</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jbod</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<span class="w">        </span><span class="nt">kraftMetadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shared</span>
+<span class="nn">---</span>
+
+<span class="c1">#Remote Cluster CR (spec.cluster is present and the SPS will be deployed on K8s cluster which we referenced as cluster-a)</span>
+<span class="c1">#-----------------------------------------------------------------------------------------------------------------------</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KafkaNodePool</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stretch1-controller</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/submariner-cluster-id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cluster2&quot;</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cluster-a</span><span class="w"> </span><span class="c1">#-------&gt;  all resources part of this KNP will be created in K8s cluster-a</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">  </span><span class="nt">roles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">controller</span>
+<span class="w">  </span><span class="nt">storage</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jbod</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<span class="w">        </span><span class="nt">kraftMetadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shared</span>
+<span class="nn">---</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KafkaNodePool</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stretch1-broker</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/submariner-cluster-id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cluster2&quot;</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cluster-a</span><span class="w"> </span><span class="c1">#-------&gt;  all resources part of this KNP will be created in K8s cluster-a</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">  </span><span class="nt">roles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broker</span>
+<span class="w">  </span><span class="nt">storage</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jbod</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<span class="w">        </span><span class="nt">kraftMetadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shared</span>
+<span class="nn">---</span>
+
+<span class="c1">#Remote Cluster CR (spec.cluster is present and the SPS will be deployed on K8s cluster which we referenced as cluster-b)</span>
+<span class="c1">#-----------------------------------------------------------------------------------------------------------------------</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KafkaNodePool</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stretch2-controller</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/submariner-cluster-id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cluster3&quot;</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cluster-b</span><span class="w">  </span><span class="c1">#-------&gt; all resources part of this KNP will be created in K8s cluster-b</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">  </span><span class="nt">roles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">controller</span>
+<span class="w">  </span><span class="nt">storage</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jbod</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<span class="w">        </span><span class="nt">kraftMetadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shared</span>
+<span class="nn">---</span>
+
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">KafkaNodePool</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stretch2-broker</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/submariner-cluster-id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cluster3&quot;</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cluster-b</span><span class="w"> </span><span class="c1">#-------&gt; all resources part of this KNP will be created in K8s cluster-b</span>
+<span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">  </span><span class="nt">roles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broker</span>
+<span class="w">  </span><span class="nt">storage</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jbod</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ephemeral</span>
+<span class="w">        </span><span class="nt">kraftMetadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shared</span>
+<span class="nn">---</span>
+
+
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka.strimzi.io/v1beta2</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Kafka</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">  </span><span class="nt">annotations</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strimzi.io/node-pools</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enabled</span>
+<span class="w">    </span><span class="nt">strimzi.io/kraft</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enabled</span>
+<span class="w">    </span><span class="nt">strimzi.io/cross-cluster-type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;submariner&quot;</span><span class="w">  </span><span class="c1">#-------&gt;  Cross Cluster Communication Technology in use </span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.8.0</span>
+<span class="w">    </span><span class="nt">metadataVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.8-IV0</span>
+<span class="w">    </span><span class="nt">listeners</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plain</span>
+<span class="w">        </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9092</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span>
+<span class="w">        </span><span class="nt">tls</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls</span>
+<span class="w">        </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9093</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span>
+<span class="w">        </span><span class="nt">tls</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">offsets.topic.replication.factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">      </span><span class="nt">transaction.state.log.replication.factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">      </span><span class="nt">transaction.state.log.min.isr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">      </span><span class="nt">default.replication.factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">      </span><span class="nt">min.insync.replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">entityOperator</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">topicOperator</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">    </span><span class="nt">userOperator</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</code></pre></div>
+<h3 id="how-it-works">How it works</h3>
+<h4 id="speccluster-in-kafkanodepool-knp"><code>spec.cluster</code> in <code>KafkaNodePool</code> (KNP)</h4>
+<p>The <code>spec.cluster</code> field in a <code>KafkaNodePool</code> (KNP) CR determines where the <code>KafkaNodePool</code> will be created:</p>
+<ul>
+<li>If <code>spec.cluster</code> is missing, the <code>KafkaNodePool</code> is assumed to be created in the central Kubernetes cluster (i.e., the cluster where the Kafka CR is applied).</li>
+<li>If <code>spec.cluster</code> is defined, the provided cluster name will be matched against the <code>STRIMZI_K8S_CLUSTERS</code> environment variable. The corresponding secrets for remote Kubernetes clusters will then be used to create the required resources in the specified cluster.</li>
+</ul>
+<h4 id="submariner-cluster-id">Submariner cluster ID</h4>
+<p>A Submariner cluster ID can be defined using the <code>submariner-cluster-id</code> label in all <code>KafkaNodePool</code> CRs.</p>
+<ul>
+<li>This label represents the cluster identifier used by Submariner for tunnel identification.</li>
+<li>Each cluster must have a unique Submariner cluster ID to ensure seamless communication.</li>
+</ul>
+<h4 id="cross-cluster-type">Cross-cluster type</h4>
+<p>Instead of defining the cross-cluster type separately for each <code>KafkaNodePool</code>, it can be centrally managed using the <code>cross-cluster-type</code> annotation in the <code>Kafka</code> CR.</p>
+<ul>
+<li>The <code>Kafka</code> CR serves as a logical place to store this information since the cross-cluster type is a shared property across all clusters in a stretch Kafka setup.</li>
+<li>This ensures consistency and simplicity in configuration by avoiding redundant definitions in multiple <code>KafkaNodePool</code> CRs.</li>
+</ul>
+<h4 id="strimzi_network_policy_generation">STRIMZI_NETWORK_POLICY_GENERATION</h4>
+<p>You need to set <code>STRIMZI_NETWORK_POLICY_GENERATION</code> to <code>false</code> because the default <code>NetworkPolicy</code> created by Strimzi restricts traffic to Kafka pods within a specific namespace. By default, Kafka pods can only receive traffic from:</p>
+<ul>
+<li>Kafka clients and Kafka-related components within the same cluster (on port 9090).</li>
+<li>Specific Strimzi components such as:<ul>
+<li>Cluster operator</li>
+<li>Entity operator</li>
+<li>Kafka exporter</li>
+<li>Cruise control</li>
+<li>(on ports 9091, 8443, 9092, and 9093).</li>
+</ul>
+</li>
+</ul>
+<p>This policy improves security by ensuring that only necessary services can communicate with Kafka pods. However, it also blocks traffic between Kubernetes clusters, which is required for stretch cluster deployments. To allow communication between Kubernetes clusters, you must set <code>STRIMZI_NETWORK_POLICY_GENERATION</code> to <code>false</code>.</p>
+<h4 id="strimzi_stretch_mode">STRIMZI_STRETCH_MODE</h4>
+<p>By default, Strimzi expects both the <code>Kafka</code> and <code>KafkaNodePool</code> (KNP) resources to be present in the same cluster where it creates the StrimziPodSet (SPS) and Kafka pods.</p>
+<p>However, in a stretch cluster deployment, the member clusters (remote clusters) do not contain the <code>Kafka</code> and <code>KafkaNodePool</code> CRs. To address this, we introduced the <code>STRIMZI_STRETCH_MODE</code> environment variable.</p>
+<ul>
+<li>When <code>STRIMZI_STRETCH_MODE</code> is set to <code>true</code>, the Strimzi operator bypasses validation checks that require <code>Kafka</code> and <code>KafkaNodePool</code> CRs to exist in the cluster where Kafka pods are deployed.</li>
+<li>This allows Strimzi to create Kafka pods in remote clusters without requiring Kafka or KafkaNodePool CRs in those clusters.</li>
+</ul>
+<h4 id="summary">Summary</h4>
+<ul>
+<li>Use the <strong><code>submariner-cluster-id</code></strong> label in <code>KafkaNodePool</code> CRs to uniquely identify each cluster in Submariner’s tunnel setup.</li>
+<li>Use the <strong><code>cross-cluster-type</code></strong> annotation in the <code>Kafka</code> CR to centrally define the cross-cluster communication type.</li>
+<li>Leverage <strong><code>spec.cluster</code></strong> in KafkaNodePool to determine the target cluster for resource creation, defaulting to the central cluster if not specified.</li>
+</ul>
+<h3 id="central-cluster-considerations">Central cluster considerations</h3>
+<p>The current setup functions even if no <code>KafkaNodePool</code> (KNP) resources are created for the central cluster. This means:</p>
+<ul>
+<li>KafkaNodePool CRs can be applied in the central cluster, triggering the creation of pods and Kubernetes resources only in remote clusters, with no additional resources required in the central cluster itself.</li>
+<li>In other words, it is entirely possible to create a stretch Kafka cluster where the central cluster hosts only the Strimzi cluster operator, with Kafka brokers running exclusively in remote clusters.</li>
+<li>This eliminates any dependency on having a <code>KafkaNodePool</code> resource in the central cluster.</li>
+</ul>
+<h2 id="deploying-stretch-clusters-in-kubernetes">Deploying stretch clusters in Kubernetes</h2>
+<p>Deploying a stretch cluster in Kubernetes follows a similar process as in OpenShift, with a few key differences:</p>
+<ol>
+<li>Installing Strimzi</li>
+<li>Editing the cluster operator <code>Deployment</code> instead of the <code>ClusterServiceVersion</code></li>
+</ol>
+<h3 id="installing-strimzi">Installing Strimzi</h3>
+<p>Download Strimzi <code>0.44.0</code> using the following command:</p>
+<div class="highlight"><pre><span></span><code>wget https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.44.0/strimzi-0.44.0.tar.gz
+</code></pre></div>
+<p>Alternatively, you can download Strimzi 0.44.0 from the <a href="https://github.com/strimzi/strimzi-kafka-operator/releases/tag/0.44.0">release page</a>.</p>
+<h3 id="extract-the-downloaded-file">Extract the downloaded file</h3>
+<div class="highlight"><pre><span></span><code>tar -xvzf strimzi-0.44.0.tar.gz
+</code></pre></div>
+<p>By default, Strimzi resources are configured to work in the <code>myproject</code> namespace. If you want to use a different namespace, update the namespace references in the relevant files using:  </p>
+<div class="highlight"><pre><span></span><code>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s/namespace: .*/namespace: &lt;yournamespace&gt;/&#39;</span><span class="w"> </span>install/cluster-operator/*RoleBinding*.yaml
+</code></pre></div>
+<p>Edit the <code>install/cluster-operator/060-Deployment-strimzi-cluster-operator.yaml</code> file:</p>
+<ul>
+<li>Set the STRIMZI_NAMESPACE environment variable to <code>yournamespace</code>.</li>
+<li>Add the following environment variables:</li>
+</ul>
+<p><strong>Central cluster configuration</strong></p>
+<p>Modify 060-Deployment-strimzi-cluster-operator.yaml and add:</p>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_STRETCH_MODE</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_K8S_CLUSTERS</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">cluster-a.url=&lt;cluster-a URL&gt;</span>
+<span class="w">      </span><span class="no">cluster-a.secret=secret-cluster-a</span>
+<span class="w">      </span><span class="no">cluster-b.url=&lt;cluster-b URL&gt;</span>
+<span class="w">      </span><span class="no">cluster-b.secret=secret-cluster-b</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_NETWORK_POLICY_GENERATION</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;false&#39;</span>
+</code></pre></div>
+<p><strong>Remote cluster configuration</strong></p>
+<p>For remote clusters, add only:</p>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">STRIMZI_STRETCH_MODE</span>
+<span class="w">  </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;true&#39;</span>
+</code></pre></div>
+<h3 id="granting-permissions-to-the-cluster-operator">Granting permissions to the cluster operator</h3>
+<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>install/cluster-operator/020-RoleBinding-strimzi-cluster-operator.yaml<span class="w"> </span>-n<span class="w"> </span>&lt;yournamespace&gt;
+kubectl<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>install/cluster-operator/031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml<span class="w"> </span>-n<span class="w"> </span>&lt;yournamespace&gt;
+</code></pre></div>
+<p>These commands create role bindings that grant the cluster operator permission to access the Kafka cluster.</p>
+<h3 id="deploy-crds-and-rbac-resources">Deploy CRDs and RBAC resources</h3>
+<p>Deploy the Custom Resource Definitions (CRDs) and role-based access control (RBAC) resources:</p>
+<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>install/cluster-operator/<span class="w"> </span>-n<span class="w"> </span>&lt;yournamespace&gt;
+</code></pre></div>
+<h3 id="remaining-steps">Remaining steps</h3>
+<p>The remaining steps are the same for both OpenShift and Kubernetes, such as:</p>
+<ul>
+<li>Updating the <code>KafkaNodePool</code> CRD</li>
+<li>Updating the <code>strimzi-cluster-operator</code> <code>ClusterRole</code></li>
+<li>Creating a Kubeconfig secret in the central cluster</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../Stretch-Cluster-Architecture/" class="btn btn-neutral float-left" title="Stretch cluster architecture"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Secure-remote-cluster-credentials/" class="btn btn-neutral float-right" title="Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Stretch-Cluster-Architecture/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Secure-remote-cluster-credentials/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/testing-stretch-clusters/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Stretch cluster testing - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Stretch cluster testing";
+        var mkdocs_page_input_path = "testing-stretch-clusters.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/testing-stretch-clusters/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Stretch cluster testing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#pod-deployment-across-clusters">Pod deployment across clusters</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#purpose">Purpose</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-execution">Test execution</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#results">Results</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#metadata-quorum-validation">Metadata quorum validation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#purpose_1">Purpose</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-execution_1">Test execution</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#results_1">Results</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#topic-replication-across-clusters">Topic replication across clusters</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#purpose_2">Purpose</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-execution_2">Test execution</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#results_2">Results</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#producing-and-consuming-messages">Producing and consuming messages</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#purpose_3">Purpose</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-execution_3">Test execution</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#results_3">Results:</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Stretch cluster testing</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="stretch-cluster-testing">Stretch cluster testing</h1>
+<p>This section provides an overview of the basic tests performed to validate the functionality of the stretch Kafka cluster using Submariner. The goal of these tests was to ensure basic connectivity, replication, and message flow across multiple Kubernetes clusters.</p>
+<h2 id="pod-deployment-across-clusters">Pod deployment across clusters</h2>
+<h3 id="purpose">Purpose</h3>
+<p>To confirm that Kafka broker pods are successfully created in multiple clusters as per the stretch configuration.</p>
+<h3 id="test-execution">Test execution</h3>
+<p>💠 Deployed a <code>Kafka</code> and <code>KafkaNodePool</code> CR in the central cluster.<br>
+💠 Ensured pods were created in the expected clusters.<br>
+💠 Verified pod logs for successful startup and connectivity.</p>
+<h3 id="results">Results</h3>
+<p>🔸 Kafka broker and controller pods successfully deployed in different clusters. <br>
+🔸 Pods registered correctly with KRaft controller.<br>
+🔸 No connectivity issues detected between brokers once running.</p>
+<p><img alt="stretch-architecture" loading="lazy" src="../image/PodsInStretchCluster.png" /></p>
+<h2 id="metadata-quorum-validation">Metadata quorum validation</h2>
+<h3 id="purpose_1">Purpose</h3>
+<p>To verify that the Kafka controller quorum is correctly established across the clusters and that leader election functions properly.</p>
+<h3 id="test-execution_1">Test execution</h3>
+<p>💠 Deployed Kafka in a stretch cluster setup. <br>
+💠 Verified <code>controller.quorum.voters</code> configuration to ensure controllers are recognized across clusters.<br>
+💠 Checked logs of controller nodes to confirm leader election and quorum establishment.</p>
+<h3 id="results_1">Results</h3>
+<p>🔸 Kafka correctly recognized controllers in multiple clusters. <br>
+🔸 Leader election succeeded, and controllers were able to reach consensus. <br>
+🔸 No unexpected failures in metadata synchronization.</p>
+<p><img alt="stretch-architecture" loading="lazy" src="../image/metadataquorum.png" /></p>
+<h2 id="topic-replication-across-clusters">Topic replication across clusters</h2>
+<h3 id="purpose_2">Purpose</h3>
+<p>To ensure that topic replication functions correctly and that partitions are distributed across multiple clusters.</p>
+<h3 id="test-execution_2">Test execution</h3>
+<p>💠 Created a topic with multiple partitions and replication factor &gt;1. <br>
+💠 Checked partition placement across brokers in different clusters.<br>
+💠 Used kafka-topics.sh --describe to verify partition replication status.</p>
+<h3 id="results_2">Results</h3>
+<p>🔸 Partitions were correctly placed across multiple clusters.<br>
+🔸 Replication worked as expected, with followers keeping up with the leader.<br>
+🔸 No significant replication lag observed.</p>
+<p><img alt="stretch-architecture" loading="lazy" src="../image/replication.png" /></p>
+<p><img alt="stretch-architecture" loading="lazy" src="../image/topicdescribe.png" /></p>
+<h2 id="producing-and-consuming-messages">Producing and consuming messages</h2>
+<h3 id="purpose_3">Purpose</h3>
+<p>To validate end-to-end message flow across the stretch cluster.</p>
+<h3 id="test-execution_3">Test execution</h3>
+<p>💠 Started a producer and sent messages to a replicated topic.<br>
+💠 Started a consumer in a different cluster and checked for message delivery.</p>
+<h3 id="results_3">Results:</h3>
+<p>🔸 Messages were successfully produced and consumed across clusters.<br>
+🔸 No significant delays or dropped messages observed.<br>
+🔸 Kafka clients could connect seamlessly across clusters.</p>
+<p><img alt="stretch-architecture" loading="lazy" src="../image/produceandconsume.png" /></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../Secure-remote-cluster-credentials/" class="btn btn-neutral float-left" title="Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Testing-cluster-failover/" class="btn btn-neutral float-right" title="Cluster Failover Testing">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Secure-remote-cluster-credentials/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Testing-cluster-failover/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

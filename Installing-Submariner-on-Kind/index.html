@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Installing-Submariner-on-Kind/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Installing Submariner on Kind - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Installing Submariner on Kind";
+        var mkdocs_page_input_path = "Installing-Submariner-on-Kind.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Installing-Submariner-on-Kind/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Installing Submariner on Kind</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#installing-kind-with-calico-cni">Installing Kind with Calico CNI</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#increasing-inotify-resource-limits">Increasing inotify resource limits</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#verifying-cluster-installation">Verifying cluster installation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#list-clusters">List clusters</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#check-current-context">Check current context</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#verify-node-counts-in-each-cluster">Verify node counts in each cluster</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Installing Submariner on Kind</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="installing-submariner-on-kind">Installing Submariner on Kind</h2>
+<p>This section details installing Submariner on Kind using Calico CNI.</p>
+<h3 id="installing-kind-with-calico-cni">Installing Kind with Calico CNI</h3>
+<p>We use Submariner's Shipyard project to install Submariner on Kind:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/submariner-io/shipyard.git
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>shipyard/
+
+
+$<span class="w"> </span>cat<span class="w"> </span>&gt;<span class="w"> </span>deploy.two.clusters.nocni.yaml<span class="w"> </span><span class="s">&lt;&lt; EOF</span>
+<span class="s">nodes: control-plane worker</span>
+<span class="s">clusters:</span>
+<span class="s"> cluster1:</span>
+<span class="s">   cni: none</span>
+<span class="s"> cluster2:</span>
+<span class="s">   cni: none</span>
+<span class="s">EOF</span>
+
+$<span class="w"> </span>make<span class="w"> </span><span class="nv">SETTINGS</span><span class="o">=</span>deploy.two.clusters.nocni.yaml<span class="w"> </span>clusters
+</code></pre></div>
+<h3 id="increasing-inotify-resource-limits">Increasing inotify resource limits</h3>
+<p>Kind clusters have default resource limits that may be insufficient for stretch Kafka clusters. Increase the limits using:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>sysctl<span class="w"> </span>fs.inotify.max_user_watches<span class="o">=</span><span class="m">524288</span>
+$<span class="w"> </span>sudo<span class="w"> </span>sysctl<span class="w"> </span>fs.inotify.max_user_instances<span class="o">=</span><span class="m">512</span>
+</code></pre></div>
+<h3 id="verifying-cluster-installation">Verifying cluster installation</h3>
+<h4 id="list-clusters">List clusters</h4>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kind<span class="w"> </span>get<span class="w"> </span>clusters
+</code></pre></div>
+<h3 id="check-current-context">Check current context</h3>
+<p>Set the correct <code>KUBECONFIG</code> environment variable and list available contexts:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="k">$(</span>find<span class="w"> </span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="k">)</span>/output/kubeconfigs/<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-printf<span class="w"> </span>%p:<span class="k">)</span>
+$<span class="w"> </span>kubectl<span class="w"> </span>config<span class="w"> </span>get-contexts
+</code></pre></div>
+<h3 id="verify-node-counts-in-each-cluster">Verify node counts in each cluster</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>--context<span class="w"> </span>cluster1<span class="w"> </span>get<span class="w"> </span>nodes
+$<span class="w"> </span>kubectl<span class="w"> </span>--context<span class="w"> </span>cluster2<span class="w"> </span>get<span class="w"> </span>nodes
+</code></pre></div>
+<h2 id="deploying-calico">Deploying Calico</h2>
+<p>Create a folder for Calico manifests:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>calico_manifests
+</code></pre></div>
+<h3 id="install-calico-on-cluster-1">Install Calico on cluster 1</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>--context<span class="w"> </span>cluster1<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/tigera-operator.yaml
+
+$<span class="w"> </span>wget<span class="w"> </span>-O<span class="w"> </span>calico_manifests/custom-resources.yaml<span class="w">  </span>https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/custom-resources.yaml
+
+$<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s,cidr: 192.168.0.0/16,cidr: 10.130.0.0/16,g&#39;</span><span class="w"> </span>calico_manifests/custom-resources.yaml
+
+$<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s,VXLANCrossSubnet,VXLAN,g&#39;</span><span class="w"> </span>calico_manifests/custom-resources.yaml
+
+$<span class="w"> </span>kubectl<span class="w"> </span>--context<span class="w"> </span>cluster1<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>calico_manifests/custom-resources.yaml
+</code></pre></div>
+<h3 id="install-calico-on-cluster-2">Install Calico on cluster 2</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>--context<span class="w"> </span>cluster2<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/tigera-operator.yaml
+
+$<span class="w"> </span>wget<span class="w"> </span>-O<span class="w"> </span>calico_manifests/custom-resources.yaml<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/manifests/custom-resources.yaml
+
+$<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s,cidr: 192.168.0.0/16,cidr: 10.131.0.0/16,g&#39;</span><span class="w"> </span>calico_manifests/custom-resources.yaml
+
+$<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s,VXLANCrossSubnet,VXLAN,g&#39;</span><span class="w"> </span>calico_manifests/custom-resources.yaml
+
+$<span class="w"> </span>kubectl<span class="w"> </span>--context<span class="w"> </span>cluster2<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>calico_manifests/custom-resources.yaml
+</code></pre></div>
+<h2 id="deploying-submariner">Deploying Submariner</h2>
+<h3 id="deploying-the-broker">Deploying the broker</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>subctl<span class="w"> </span>deploy-broker<span class="w"> </span>--context<span class="w"> </span>cluster1
+</code></pre></div>
+<h3 id="connecting-clusters-to-the-broker">Connecting clusters to the broker</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>subctl<span class="w"> </span>join<span class="w"> </span>--context<span class="w"> </span>cluster1<span class="w">  </span>broker-info.subm<span class="w"> </span>--clusterid<span class="w"> </span>cluster1<span class="w"> </span>--natt<span class="o">=</span><span class="nb">false</span>
+$<span class="w"> </span>subctl<span class="w"> </span>join<span class="w"> </span>--context<span class="w"> </span>cluster2<span class="w">  </span>broker-info.subm<span class="w"> </span>--clusterid<span class="w"> </span>cluster2<span class="w"> </span>--natt<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<h3 id="checking-submariner-connections">Checking Submariner connections</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>subctl<span class="w"> </span>show<span class="w"> </span>connections<span class="w">  </span>--context<span class="w"> </span>cluster2<span class="w">   </span>
+$<span class="w"> </span>subctl<span class="w"> </span>show<span class="w"> </span>connections<span class="w">  </span>--context<span class="w"> </span>cluster1
+</code></pre></div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../setting-up-submariner/" class="btn btn-neutral float-left" title="Setting up Submariner"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Installing-Submariner-on-OpenShift/" class="btn btn-neutral float-right" title="Installing Submariner on OpenShift">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../setting-up-submariner/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Installing-Submariner-on-OpenShift/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
