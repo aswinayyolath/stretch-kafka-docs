@@ -1,6 +1,6 @@
-# Entity Operator
+# Impact of Entity Operator Availability in a Stretch Kafka Cluster
 
-The Entity Operator in Strimzi is responsible for managing Kafka users and topics. It automates the creation, configuration, and security settings of these entities, ensuring smooth integration with Kafka clusters deployed via Strimzi.
+The Entity Operator in Strimzi is responsible for managing Kafka users and topics. It automates the creation, configuration, and security settings of these entities, ensuring smooth integration with Kafka clusters deployed via Strimzi. This document explains how its availability affects topic and user management when deployed in a multi-cluster Kafka setup.
 
 ## Key Components of Entity Operator
 
@@ -169,53 +169,9 @@ KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
 
 In stretch Kafka deployment, where
 
-- ✅ Kafka brokers and controllers are spread across multiple Kubernetes clusters.
-- ✅ The central cluster hosts all Kafka CRs, including Kafka, KafkaNodePool, KafkaUser, and KafkaTopic.
-- ✅ The Entity Operator (managing users & topics) runs in the central cluster.
-
-## Does the Kafka Cluster Still Function?
-
-Yes, but with conditions.
-
-- Brokers in other Kubernetes clusters are still running.
-- Kafka controllers may still be running (if a quorum is maintained).
-
-Replication between brokers (spread across clusters) continues as long as there’s a majority quorum of controllers.
-
-- ✅ If a majority of controllers are still available in the surviving clusters, Kafka continues running.
-- 🚨 If the majority of controllers were in the central cluster and lost, Kafka will experience a complete outage.
-
-💡 Mitigation -> user need to ensure the `controller.quorum.voters` are spread across clusters to avoid losing the majority.
-
-## Can Kafka Clients Still Communicate with Brokers?
-
-Yes, if at least one broker remains reachable.
-
-Clients connect to brokers, not the Entity Operator or the central cluster.
-
-- If clients' bootstrap servers list includes brokers running in the surviving clusters, they can still connect.
-- If a leader partition for a topic is hosted on a broker in a surviving cluster, the topic remains available.
-- If all leader partitions for a topic were on brokers in the central cluster, that topic becomes unavailable.
-
-💡 Mitigation -> Use Kafka’s rack awareness (`broker.rack`) and ISR (In-Sync Replica) balancing to distribute leader partitions across clusters.
-
-## Can Clients Still Produce & Consume Messages?
-
-Yes, if leader partitions are available.
-No, if all leader partitions were in the lost central cluster.
-
-**Producing Messages**
-
-- A producer can send messages only if the leader partition for a topic is still available in a surviving cluster.
-- If the leader was in the lost central cluster, Kafka automatically elects a new leader (if ISR exists).
-- If no ISR exists, production fails.
-
-**Consuming Messages**
-
-- Consumers can still fetch messages from available partitions.
-- If consumer group metadata was stored in a lost broker, the group might experience issues.
-
-💡 Mitigation -> Enable `min.insync.replicas` and leader election across clusters to ensure partition availability.
+✅ Kafka brokers and controllers are spread across multiple Kubernetes clusters.<br>
+✅ The central cluster hosts all Kafka CRs, including Kafka, KafkaNodePool, KafkaUser, and KafkaTopic.<br>
+✅ The Entity Operator (managing users & topics) runs in the central cluster.
 
 
 ## What About Entity Operator Functions?
@@ -225,10 +181,34 @@ The Entity Operator becomes unavailable when the central cluster goes down. Howe
 - User authentication still works as long as secrets (TLS/SCRAM) were distributed to all clusters.
 - Topics and ACLs remain intact but cannot be updated or created until the central cluster recovers.
 
-Kafka clients (producers and consumers) can still authenticate and connect to Kafka brokers in the surviving clusters as long as the necessary authentication credentials (secrets) are available in those clusters.
+## What Happens If No Cluster Has KafkaUser and KafkaTopic CRs?
 
-If the KafkaUser secrets only exist in the central cluster, then when it goes down, clients in other clusters cannot authenticate to Kafka brokers. However, if these secrets were already copied to all clusters where brokers are running, authentication will still work even if the central cluster is down.
+If the central cluster is the only one hosting KafkaUser and KafkaTopic CRs, then when it goes down:
 
-To avoid authentication failures when the central cluster goes down, you must:
+1. User Authentication Risks
 
-- Replicate KafkaUser secrets across all clusters where Kafka brokers exist.
+   - Kafka brokers in surviving clusters rely on existing secrets for authentication.
+   - If KafkaUser secrets were only stored in the central cluster and not replicated, brokers in other clusters will be unable to authenticate client requests.
+   - New client connections will fail since brokers cannot verify credentials.
+   - Existing client connections may remain active if they were authenticated before the central cluster failure, but they will eventually be disconnected when session timeouts occur.
+
+2. Topic Management Limitations
+
+   - Topics that were already created will continue to exist and function normally.
+   - Clients can still produce and consume messages only if they are already authenticated before the central cluster failure.
+   - No new topics can be created or updated since the KafkaTopic CRs and Entity Operator are unavailable.
+
+### Mitigation Strategies
+
+To ensure Kafka clients remain functional even when the central cluster goes down, we should implement the following best practices
+
+✅ Replicate KafkaUser secrets across all clusters where Kafka brokers exist.
+
+- This ensures authentication remains functional even if the central cluster is unavailable.
+
+✅ Ensure Kafka brokers cache authentication data where possible(This needs verification).
+
+- Some authentication mechanisms (like SCRAM) allow brokers to cache credentials temporarily.
+- This can help avoid immediate authentication failures if the central cluster is temporarily down.
+
+✅ Alternatively we can Explore options like KafkaAccess Operator. This reduces dependency on a single cluster for authentication.
