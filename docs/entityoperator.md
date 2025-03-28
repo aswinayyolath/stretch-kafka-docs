@@ -124,6 +124,8 @@ It will contain
 
 - password (Base64-encoded password)
 
+*Note:* The Kubernetes Secret is primarily used to distribute the initial SCRAM username and password to clients. However, Kafka brokers internally store hashed verifiers of these credentials. When clients authenticate, they send their credentials to Kafka, which verifies them against the stored hashed verifiers rather than using the plaintext password from the Secret.
+
 ### Using These Credentials in a Kafka Client
 
 **Example**
@@ -192,8 +194,9 @@ The failure of the central Kubernetes cluster will render the Entity Operator un
 #### Authentication
 
 - Kafka brokers in the surviving member clusters rely on the configured authentication mechanisms and the presence of valid credentials for client authentication.
-- If secrets containing authentication credentials (TLS certificates or SCRAM passwords) are not replicated across all clusters, new client deployments and credential updates will fail. However, existing clients with valid credentials will continue functioning until their credentials expire or require rotation.
-- Existing client connections that were authenticated before the central cluster failure might remain active for a period, but they will eventually be disconnected due to session timeouts or other factors, and they will fail to re-establish connections without valid authentication.
+- If TLS certificates secrets are not replicated across all clusters, new client deployments and credential updates will fail. However, existing clients with valid TLS certificates will continue functioning until their certificates expire or require rotation. The duration for which they can operate depends entirely on the expiration date set when the certificates were issued.
+- If SCRAM credentials have been successfully replicated across the Kafka brokers, existing clients should be able to continue authenticating, even if the Central cluster is down. The issue is with new client deployments or credential updates.
+- Existing client connections that were authenticated before the central cluster failure might remain active for a period, but their continued operation depends on multiple factors. If a Kafka broker restarts, clients may need to re-authenticate, which could fail if they rely on new credentials from an unavailable Entity Operator. Additionally, the configured `session.timeout.ms` and Kafka’s reauthentication behavior may determine how long clients remain connected before being disconnected.
 - Crucially, the management of credentials (e.g., rotation) through the User Operator will be unavailable.
 
 #### Authorization
@@ -211,12 +214,12 @@ The failure of the central Kubernetes cluster will render the Entity Operator un
 
 ### Why the Entity Operator's Absence Impacts Clients
 
-As outlined in the 'Impact of Central Cluster Failure' section, the unavailability of the Entity Operator disrupts the declarative management of critical aspects like user authentication and topic lifecycle within your Kubernetes environment. This loss of control directly affects the ability of clients to authenticate, access new resources, and manage their connections effectively.
+As outlined in the 'Impact of Central Cluster Failure' section, the unavailability of the Entity Operator disrupts the declarative management of critical administrative functions like user authentication and topic lifecycle within your Kubernetes environment. This loss of control directly impacts the ability of administrators to create, update, or delete users and topics, and to manage their credentials and access.
 
-### Mitigation Strategies to Enhance Client Functionality During Central Cluster Failure:
+### Best Practices for Stretched Kafka Deployments
 
-To enhance the resilience of Kafka clients in the event of a central cluster failure, the following best practices are recommended:
+To enhance the resilience of Kafka clients in a stretched deployment, especially in the event of a central cluster failure, the following best practices are recommended:
 
-✅ Replicate KafkaUser Secrets: Ensure that the Kubernetes Secrets containing authentication credentials (TLS certificates or SCRAM passwords) are replicated across all Kubernetes clusters where Kafka brokers are running. This allows brokers in surviving clusters to authenticate clients using the known credentials.
+✅ Ensure that authentication credentials (TLS certificates and SCRAM hashed verifiers) are replicated across all Kafka brokers in the stretched cluster. This ensures that clients can continue to authenticate even if the central cluster is unavailable.
 
-✅ Explore Alternative Authentication and Authorization Solutions: Consider solutions like the Kafka Access Operator, which might offer more distributed control over authentication and authorization, reducing the dependency on a single central cluster for these critical functions.
+✅ Consider exploring alternative authentication and authorization solutions, such as the Kafka Access Operator, which might offer more distributed control and reduce the dependency on a single central cluster for these critical functions. This can improve the overall resilience of the deployment.
