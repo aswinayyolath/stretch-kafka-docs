@@ -163,11 +163,12 @@ KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
 
 The fact that the User Operator manages credentials and ACLs through Kafka's standard mechanisms means that the availability of the User Operator is crucial for:
 
-- Creating and managing new user identities within Kafka.
-- Ensuring that the correct authentication credentials are in place and accessible.
-- Defining and enforcing authorization rules for user access to topics.
+- Creating, viewing, updating and deleting user identities and their permissions (ACL) within Kafka.
+- Creating, viewing, updating and deleting topics and their configuration within Kafka.
 
-When the Central cluster (and thus the User Operator) is unavailable, the ability to perform these management tasks is lost, directly impacting the ability of clients to authenticate and operate with the expected level of access. While the underlying Kafka authentication and authorization capabilities exist within the brokers, the management and provisioning through the Kubernetes control plane are disrupted. This means that administrators will not be able to create, update, or delete Kafka users and topics, including performing credential rotations and ACL updates.
+When the Central cluster (and thus the Entity Operator) is unavailable:
+- administrators will not be able to view create, update, or delete Kafka users and topics via Kubernetes custom resources.
+- existing users, topics and client applications using those credentials will continue to work as usual with no disruption. 
 
 
 ### Summary of How Applications Use KafkaTopic & KafkaUser CRs
