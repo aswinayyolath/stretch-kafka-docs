@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Setting-up-Rack-Awareness-In-Stretch-Cluster/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Rack Awareness in Stretch Clusters - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Rack Awareness in Stretch Clusters";
+        var mkdocs_page_input_path = "Setting-up-Rack-Awareness-In-Stretch-Cluster.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Setting-up-Rack-Awareness-In-Stretch-Cluster/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Rack Awareness in Stretch Clusters</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#configuring-rack-awareness">Configuring Rack Awareness</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#step-1-label-worker-nodes">Step 1: Label Worker Nodes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#step-2-update-kafka-custom-resource">Step 2: Update Kafka Custom Resource</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#step-3-configure-clusterrolebinding">Step 3: Configure ClusterRoleBinding</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#verifying-rack-awareness">Verifying Rack Awareness</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#create-a-topic">Create a Topic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#describe-the-topic">Describe the Topic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#check-broker-configuration">Check Broker Configuration</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#verify-broker-configmaps-contain-rack-id-settings">Verify Broker ConfigMaps Contain Rack ID Settings</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#verify-rack-details-using-kafka-broker-api-versionssh">Verify rack details using kafka-broker-api-versions.sh</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Rack Awareness in Stretch Clusters</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="rack-awareness-in-stretch-clusters">Rack Awareness in Stretch Clusters</h1>
+<h2 id="overview">Overview</h2>
+<p>Kubernetes uses zone-aware scheduling to distribute pod replicas across different zones for improved fault tolerance. Some Kubernetes clusters, such as AWS-based clusters, already have built-in zone awareness. However, for clusters that are not zone-aware, each worker node must be manually labeled with a zone.</p>
+<h2 id="configuring-rack-awareness">Configuring Rack Awareness</h2>
+<p>To enable rack awareness in a Stretch Kafka cluster, follow these steps:</p>
+<h3 id="step-1-label-worker-nodes">Step 1: Label Worker Nodes</h3>
+<p>Label each Kubernetes worker node with its respective zone using the following command:</p>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>kubectl<span class="w"> </span>label<span class="w"> </span>node<span class="w"> </span>&lt;workernodename&gt;<span class="w"> </span>topology.kubernetes.io/zone<span class="o">=</span>&lt;value&gt;
+</code></pre></div>
+<p>Repeat this command for all worker nodes in each cluster involved in the Stretch setup.</p>
+<p><strong>Example: Central Cluster</strong></p>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>node<span class="w"> </span>--selector<span class="o">=</span><span class="s1">&#39;!node-role.kubernetes.io/master&#39;</span><span class="w"> </span>--show-labels<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $6}&#39;</span>
+</code></pre></div>
+<p><strong>Output:</strong></p>
+<div class="highlight"><pre><span></span><code>beta.kubernetes.io/arch<span class="o">=</span>amd64,beta.kubernetes.io/os<span class="o">=</span>linux,kubernetes.io/arch<span class="o">=</span>amd64,kubernetes.io/hostname<span class="o">=</span>worker0.example.com,kubernetes.io/os<span class="o">=</span>linux,node-role.kubernetes.io/worker<span class="o">=</span>,topology.kubernetes.io/zone<span class="o">=</span>cluster1
+beta.kubernetes.io/arch<span class="o">=</span>amd64,beta.kubernetes.io/os<span class="o">=</span>linux,kubernetes.io/arch<span class="o">=</span>amd64,kubernetes.io/hostname<span class="o">=</span>worker1.example.com,kubernetes.io/os<span class="o">=</span>linux,node-role.kubernetes.io/worker<span class="o">=</span>,topology.kubernetes.io/zone<span class="o">=</span>cluster1
+</code></pre></div>
+<p><strong>Example: Remote Clusters</strong></p>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>node<span class="w"> </span>--kubeconfig<span class="w"> </span>cluster-a-config<span class="w"> </span>--selector<span class="o">=</span><span class="s1">&#39;!node-role.kubernetes.io/master&#39;</span><span class="w"> </span>--show-labels<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $6}&#39;</span>
+</code></pre></div>
+<p><strong>Output:</strong></p>
+<div class="highlight"><pre><span></span><code>beta.kubernetes.io/arch<span class="o">=</span>amd64,beta.kubernetes.io/os<span class="o">=</span>linux,kubernetes.io/arch<span class="o">=</span>amd64,kubernetes.io/hostname<span class="o">=</span>worker0.remote1.example.com,kubernetes.io/os<span class="o">=</span>linux,node-role.kubernetes.io/worker<span class="o">=</span>,topology.kubernetes.io/zone<span class="o">=</span>cluster2
+</code></pre></div>
+<p>Repeat the above steps for all remote clusters involved.</p>
+<h3 id="step-2-update-kafka-custom-resource">Step 2: Update Kafka Custom Resource</h3>
+<p>Once all worker nodes are labeled, update the Kafka CR in the Central Cluster to include rack awareness settings:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">rack</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">topologyKey</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">topology.kubernetes.io/zone</span>
+</code></pre></div>
+<h3 id="step-3-configure-clusterrolebinding">Step 3: Configure ClusterRoleBinding</h3>
+<p>Strimzi creates a ClusterRoleBinding in the Central Cluster to allow necessary permissions for fetching node details. This must be manually created in the remote clusters for now (<strong>Note</strong>: Once we start real implementation we can make code changes such that this <code>ClusterRoleBinding</code> will be automatically created in the remote cluster by the Operator running in the central cluster )</p>
+<div class="highlight"><pre><span></span><code><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterRoleBinding</span>
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io/v1</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strimzi-my-cluster-kafka-init</span>
+<span class="w">  </span><span class="nt">labels</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">app.kubernetes.io/instance</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">app.kubernetes.io/managed-by</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strimzi-cluster-operator</span>
+<span class="w">    </span><span class="nt">app.kubernetes.io/name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
+<span class="w">    </span><span class="nt">app.kubernetes.io/part-of</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strimzi-my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster</span>
+<span class="w">    </span><span class="nt">strimzi.io/component-type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
+<span class="w">    </span><span class="nt">strimzi.io/kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Kafka</span>
+<span class="w">    </span><span class="nt">strimzi.io/name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster-kafka</span>
+<span class="nt">subjects</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ServiceAccount</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cluster-kafka</span>
+<span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka-namespace</span>
+<span class="nt">roleRef</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">apiGroup</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rbac.authorization.k8s.io</span>
+<span class="w">  </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterRole</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strimzi-kafka-broker</span>
+</code></pre></div>
+<h2 id="verifying-rack-awareness">Verifying Rack Awareness</h2>
+<h3 id="create-a-topic">Create a Topic</h3>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>bin/kafka-topics.sh<span class="w"> </span>--create<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.kafka-namespace.svc.cluster.local:9092<span class="w"> </span>--replication-factor<span class="w"> </span><span class="m">3</span><span class="w"> </span>--partitions<span class="w"> </span><span class="m">6</span><span class="w"> </span>--topic<span class="w"> </span>test-topic-1
+</code></pre></div>
+<h3 id="describe-the-topic">Describe the Topic</h3>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>bin/kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.kafka-namespace.svc.cluster.local:9092<span class="w"> </span>--topic<span class="w"> </span>test-topic-1
+Example<span class="w"> </span>Output:
+
+Topic:<span class="w"> </span>test-topic-1<span class="w">     </span>PartitionCount:<span class="w"> </span><span class="m">6</span><span class="w">       </span>ReplicationFactor:<span class="w"> </span><span class="m">3</span>
+Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">2</span><span class="w">       </span>Replicas:<span class="w"> </span><span class="m">2</span>,14,6<span class="w">        </span>Isr:<span class="w"> </span><span class="m">2</span>,14,6
+Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">      </span>Replicas:<span class="w"> </span><span class="m">12</span>,7,0<span class="w">        </span>Isr:<span class="w"> </span><span class="m">12</span>,7,0
+Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">8</span><span class="w">       </span>Replicas:<span class="w"> </span><span class="m">8</span>,1,13<span class="w">        </span>Isr:<span class="w"> </span><span class="m">8</span>,1,13
+</code></pre></div>
+<h3 id="check-broker-configuration">Check Broker Configuration</h3>
+<div class="highlight"><pre><span></span><code>🔥🔥🔥<span class="w"> </span>$<span class="w"> </span>cat<span class="w"> </span>/opt/kafka/init/rack.id
+Output<span class="w"> </span><span class="k">for</span><span class="w"> </span>brokers<span class="w"> </span><span class="k">in</span><span class="w"> </span>different<span class="w"> </span>clusters:
+
+cluster1
+cluster2
+cluster3
+</code></pre></div>
+<h3 id="verify-broker-configmaps-contain-rack-id-settings">Verify Broker ConfigMaps Contain Rack ID Settings</h3>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="c1">##########</span>
+<span class="w">    </span><span class="c1"># Rack ID</span>
+<span class="w">    </span><span class="c1">##########</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">broker.rack=${strimzidir:/opt/kafka/init:rack.id}</span>
+</code></pre></div>
+<p>Strimzi typically sets this environment variable in the broker pod configMap based on rackId property in the Kafka CR.</p>
+<h3 id="verify-rack-details-using-kafka-broker-api-versionssh">Verify rack details using kafka-broker-api-versions.sh</h3>
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>bin/kafka-broker-api-versions.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap.real.svc:9092<span class="w"> </span>
+my-cluster-stretch2-broker-12.cluster2.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">12</span><span class="w"> </span>rack:<span class="w"> </span>cluster3<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-stretch2-broker-13.cluster2.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">13</span><span class="w"> </span>rack:<span class="w"> </span>cluster3<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-stretch1-broker-7.cluster3.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">7</span><span class="w"> </span>rack:<span class="w"> </span>cluster1<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-broker-1.cluster1.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">1</span><span class="w"> </span>rack:<span class="w"> </span>cluster2<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-stretch1-broker-6.cluster3.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">6</span><span class="w"> </span>rack:<span class="w"> </span>cluster1<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-stretch1-broker-8.cluster3.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">8</span><span class="w"> </span>rack:<span class="w"> </span>cluster1<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">0</span><span class="w"> </span>rack:<span class="w"> </span>cluster2<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-broker-2.cluster1.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">2</span><span class="w"> </span>rack:<span class="w"> </span>cluster2<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+my-cluster-stretch2-broker-14.cluster2.my-cluster-kafka-brokers.real.svc.clusterset.local:9092<span class="w"> </span><span class="o">(</span>id:<span class="w"> </span><span class="m">14</span><span class="w"> </span>rack:<span class="w"> </span>cluster3<span class="o">)</span><span class="w"> </span>-&gt;<span class="w"> </span><span class="o">(</span>
+<span class="w">        </span>Produce<span class="o">(</span><span class="m">0</span><span class="o">)</span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="o">[</span>usable:<span class="w"> </span><span class="m">11</span><span class="o">]</span>,
+<span class="w">        </span>......
+<span class="o">)</span>
+sh-5.1$<span class="w"> </span>
+</code></pre></div>
+<ul>
+<li>This command lists all Kafka brokers along with their rack information.</li>
+<li>The rack ID is displayed next to each broker (rack: clusterX), confirming that the rack-aware configuration is correctly applied.</li>
+</ul>
+<p>With this setup, Kafka can distribute replicas across different zones, ensuring resilience in a multi-cluster deployment.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../Testing-performance/" class="btn btn-neutral float-left" title="Performance Testing"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Testing-performance/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

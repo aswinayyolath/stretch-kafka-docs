@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/building-strimzi-for-stretch-cluster/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Building Strimzi Kafka operator for stretch clusters - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Building Strimzi Kafka operator for stretch clusters";
+        var mkdocs_page_input_path = "building-strimzi-for-stretch-cluster.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/building-strimzi-for-stretch-cluster/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Building Strimzi Kafka operator for stretch clusters</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#building-the-operator">Building the operator</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#clone-the-repository">Clone the repository</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#checkout-the-stretch-cluster-branch">Checkout the stretch cluster branch</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#set-docker-registry-variables">Set Docker registry variables</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#build-the-operator">Build the operator</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#testing-the-operator-image-without-building">Testing the operator image without building</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-failover-and-resiliency/">Failover Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Building Strimzi Kafka operator for stretch clusters</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="building-strimzi-kafka-operator-for-stretch-clusters">Building Strimzi Kafka operator for stretch clusters</h1>
+<p>The Strimzi community is actively transitioning to KRaft, leading to frequent changes in the main branch. At of the time of writing, Strimzi is in the process of removing ZooKeeper-related code. To ensure stability, we have based our development for stretch clusters on Strimzi <strong>0.44.0</strong>.</p>
+<p>The prototype code for stretch clusters is available in the following <a href="https://github.com/aswinayyolath/strimzi-kafka-operator/tree/strecth-cluster-prototype">branch</a>. This branch is derived from the <strong>Strimzi 0.44.0</strong> release tag. To view the changes made on top of Strimzi <strong>0.44.0</strong>, refer to the following comparison <a href="https://github.com/aswinayyolath/strimzi-kafka-operator/compare/main...aswinayyolath:strimzi-kafka-operator:strecth-cluster-prototype?expand=1">link</a>.</p>
+<hr />
+<h2 id="building-the-operator">Building the operator</h2>
+<h3 id="clone-the-repository">Clone the repository</h3>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/aswinayyolath/strimzi-kafka-operator.git
+</code></pre></div>
+<h3 id="checkout-the-stretch-cluster-branch">Checkout the stretch cluster branch</h3>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>strecth-cluster-prototype
+</code></pre></div>
+<h3 id="set-docker-registry-variables">Set Docker registry variables</h3>
+<p>Before building the operator, ensure that the <code>DOCKER_ORG</code> and <code>DOCKER_REGISTRY</code> environment variables are set correctly. These should match your Docker Hub username and the Docker registry you are using. If <code>DOCKER_REGISTRY</code> is unset, it defaults to <code>docker.io</code>.</p>
+<p>For more details, refer to the <a href="https://github.com/strimzi/strimzi-kafka-operator/blob/main/development-docs/DEV_GUIDE.md">Strimzi developer guide</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_ORG</span><span class="o">=</span>&lt;your_docker_hub_username&gt;
+<span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_REGISTRY</span><span class="o">=</span>&lt;your_docker_registry&gt;<span class="w">  </span><span class="c1"># Defaults to docker.io if unset</span>
+</code></pre></div>
+<h3 id="build-the-operator">Build the operator</h3>
+<p>Since this is a prototype, we have not implemented test coverage yet. To avoid test compilation errors during the build process, disable test execution:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">DOCKER_PLATFORM</span><span class="o">=</span><span class="s2">&quot;--platform linux/amd64&quot;</span><span class="w"> </span>make<span class="w"> </span><span class="nv">MVN_ARGS</span><span class="o">=</span><span class="s1">&#39;-Dmaven.test.skip=true&#39;</span><span class="w"> </span>all
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>🚨 If you encounter an error related to unused declared dependencies, such as
+    <code>Unused declared dependencies found</code>, you might need to comment out the dependencies mentioned in the error message within the corresponding pom.xml file. 🚨</p>
+</div>
+<h2 id="testing-the-operator-image-without-building">Testing the operator image without building</h2>
+<p>If you prefer to test the operator without building it from source, you can use the pre-built image available on <code>Docker Hub</code>:</p>
+<div class="highlight"><pre><span></span><code>aswinayyolath/stretchcluster:latest
+</code></pre></div>
+<p>A detailed guide on testing the stretch cluster will be provided in a later section.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../Setting-up-cilium/" class="btn btn-neutral float-left" title="Setting up Cilium"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Stretch-Cluster-Architecture/" class="btn btn-neutral float-right" title="Stretch cluster architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Setting-up-cilium/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Stretch-Cluster-Architecture/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

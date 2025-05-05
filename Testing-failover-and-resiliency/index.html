@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://github.com/aswinayyolath/stretch-kafka-docs/Testing-failover-and-resiliency/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Failover Testing - Strimzi Stretch Cluster</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Failover Testing";
+        var mkdocs_page_input_path = "Testing-failover-and-resiliency.md";
+        var mkdocs_page_url = "/aswinayyolath/stretch-kafka-docs/Testing-failover-and-resiliency/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Strimzi Stretch Cluster
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stretch Cluster using Strimzi</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../setting-up-submariner/">Setting up Submariner</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-Kind/">Installing Submariner on Kind</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Installing-Submariner-on-OpenShift/">Installing Submariner on OpenShift</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-submariner/">Validating the Submariner deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-cilium/">Setting up Cilium</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../building-strimzi-for-stretch-cluster/">Building Strimzi Kafka operator for stretch clusters</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Stretch-Cluster-Architecture/">Stretch cluster architecture</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Deploying-Strimzi-in-Stretch-Mode/">Deploying Strimzi in Stretch Mode</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Secure-remote-cluster-credentials/">Securing Remote Cluster Credentials in Multi-Cluster Kafka Deployment</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../testing-stretch-clusters/">Stretch cluster testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-cluster-failover/">Cluster Failover Testing</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Failover Testing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#cluster-setup">Cluster Setup</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#topic-availability-and-leader-election-testing">Topic availability and leader election testing</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#create-a-topic-with-all-brokers-participating">Create a topic with all brokers participating</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#describe-topic">Describe topic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#deleting-broker-8-to-see-leadership-transition">Deleting broker 8 to see leadership transition</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#deleting-broker-12-to-see-leadership-transition">Deleting broker 12 to see leadership transition</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#controller-leader-election-test">Controller leader election test</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#checking-initial-leader">Checking Initial Leader</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#deleting-controller-5">Deleting Controller 5</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#new-leader-election-output">New Leader Election Output</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#deleting-controller-4">Deleting Controller 4</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#new-leader-election-output_1">New Leader Election Output</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#checking-cross-cluster-leader-election">Checking cross cluster leader election</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Testing-performance/">Performance Testing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../Setting-up-Rack-Awareness-In-Stretch-Cluster/">Rack Awareness in Stretch Clusters</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Strimzi Stretch Cluster</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Failover Testing</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="failover-testing">Failover Testing</h1>
+<p>This document provides a detailed guide on testing failover scenarios, leader election, and topic availability in a multi-cluster Kafka deployment. </p>
+<h3 id="cluster-setup">Cluster Setup</h3>
+<p>The Kafka clusters are deployed across multiple Kubernetes clusters, as shown below</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-a
+NAME<span class="w">                                                </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+my-cluster-broker-0<span class="w">                                 </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-broker-1<span class="w">                                 </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-broker-2<span class="w">                                 </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-controller-3<span class="w">                             </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h55m
+my-cluster-controller-4<span class="w">                             </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h55m
+my-cluster-controller-5<span class="w">                             </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h55m
+strimzi-cluster-operator-v0.44.0-6ff79bb868-vws4n<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>4h20m
+$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-b
+NAME<span class="w">                                                </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+my-cluster-stretch1-broker-6<span class="w">                        </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch1-broker-7<span class="w">                        </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch1-broker-8<span class="w">                        </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch1-controller-10<span class="w">                   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch1-controller-11<span class="w">                   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch1-controller-9<span class="w">                    </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+strimzi-cluster-operator-v0.44.0-78979ffb66-hkjf6<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>2d17h
+$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-c
+NAME<span class="w">                                                </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
+my-cluster-stretch2-broker-12<span class="w">                       </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch2-broker-13<span class="w">                       </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch2-broker-14<span class="w">                       </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch2-controller-15<span class="w">                   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch2-controller-16<span class="w">                   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+my-cluster-stretch2-controller-17<span class="w">                   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>3h56m
+strimzi-cluster-operator-v0.44.0-6c4f95869b-2qgjg<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>2d17h
+</code></pre></div>
+<h2 id="topic-availability-and-leader-election-testing">Topic availability and leader election testing</h2>
+<h3 id="create-a-topic-with-all-brokers-participating">Create a topic with all brokers participating</h3>
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-topics.sh<span class="w"> </span>--create<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w"> </span>--replication-factor<span class="w"> </span><span class="m">9</span><span class="w"> </span>--partitions<span class="w"> </span><span class="m">3</span><span class="w"> </span>--topic<span class="w"> </span>long-replicated-topic
+Created<span class="w"> </span>topic<span class="w"> </span>long-replicated-topic.
+</code></pre></div>
+<h3 id="describe-topic">Describe topic</h3>
+<p><div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w">  </span>--topic<span class="w"> </span>long-replicated-topic
+Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>TopicId:<span class="w"> </span>0qzO6dCFRiy4n3aVgPZ-gA<span class="w"> </span>PartitionCount:<span class="w"> </span><span class="m">3</span><span class="w">   </span>ReplicationFactor:<span class="w"> </span><span class="m">9</span><span class="w">    </span>Configs:<span class="w"> </span>min.insync.replicas<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">8</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1,2,6,7<span class="w">  </span>Isr:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1,2,6,7<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2,6,7,8<span class="w">  </span>Isr:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2,6,7,8<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">13</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6,7,8,12<span class="w">  </span>Isr:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6,7,8,12<span class="w">   </span>Elr:<span class="w">    </span>LastKnownElr:
+</code></pre></div>
+Partition 0, 1 and 2 have leaders as 8, 12 and 13 respectively. We're going to delete some of these leader brokers to see if new partition leaders are elected to another available broker.</p>
+<h3 id="deleting-broker-8-to-see-leadership-transition">Deleting broker 8 to see leadership transition</h3>
+<p><div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>my-cluster-stretch1-broker-8<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-b
+pod<span class="w"> </span><span class="s2">&quot;my-cluster-stretch1-broker-8&quot;</span><span class="w"> </span>deleted
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w">  </span>--topic<span class="w"> </span>long-replicated-topic
+Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>TopicId:<span class="w"> </span>0qzO6dCFRiy4n3aVgPZ-gA<span class="w"> </span>PartitionCount:<span class="w"> </span><span class="m">3</span><span class="w">   </span>ReplicationFactor:<span class="w"> </span><span class="m">9</span><span class="w">    </span>Configs:<span class="w"> </span>min.insync.replicas<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1,2,6,7<span class="w">  </span>Isr:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2,6,7<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">12</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2,6,7,8<span class="w">  </span>Isr:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2,6,7<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">13</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6,7,8,12<span class="w">  </span>Isr:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6,7,12<span class="w"> </span>Elr:<span class="w">    </span>LastKnownElr:
+</code></pre></div>
+We can see that leadership has been transitioned to 12</p>
+<h3 id="deleting-broker-12-to-see-leadership-transition">Deleting broker 12 to see leadership transition</h3>
+<p><div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>my-cluster-stretch2-broker-12<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-c
+pod<span class="w"> </span><span class="s2">&quot;my-cluster-stretch2-broker-12&quot;</span><span class="w"> </span>deleted
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-topics.sh<span class="w"> </span>--describe<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w">  </span>--topic<span class="w"> </span>long-replicated-topic
+Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>TopicId:<span class="w"> </span>0qzO6dCFRiy4n3aVgPZ-gA<span class="w"> </span>PartitionCount:<span class="w"> </span><span class="m">3</span><span class="w">   </span>ReplicationFactor:<span class="w"> </span><span class="m">9</span><span class="w">    </span>Configs:<span class="w"> </span>min.insync.replicas<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">0</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">8</span><span class="w">   </span>Replicas:<span class="w"> </span><span class="m">8</span>,12,13,14,0,1,2,6,7<span class="w">  </span>Isr:<span class="w"> </span><span class="m">0</span>,14,1,6,13,2,7,8<span class="w">  </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">1</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">13</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">12</span>,13,14,0,1,2,6,7,8<span class="w">  </span>Isr:<span class="w"> </span><span class="m">0</span>,14,1,6,13,2,7,8<span class="w">  </span>Elr:<span class="w">    </span>LastKnownElr:
+<span class="w">    </span>Topic:<span class="w"> </span>long-replicated-topic<span class="w">    </span>Partition:<span class="w"> </span><span class="m">2</span><span class="w">    </span>Leader:<span class="w"> </span><span class="m">13</span><span class="w">  </span>Replicas:<span class="w"> </span><span class="m">13</span>,14,0,1,2,6,7,8,12<span class="w">  </span>Isr:<span class="w"> </span><span class="m">0</span>,14,1,6,13,2,7,8<span class="w">  </span>Elr:<span class="w">    </span>LastKnownElr:
+</code></pre></div></p>
+<p>Conclusion: The topic remains stable and leader election happens normally even after the leader has been deleted</p>
+<h2 id="controller-leader-election-test">Controller leader election test</h2>
+<p>The controllers across stretch cluster must have an active leader. If a leader controller goes down, any available controller from any cluster should be elected as leader.</p>
+<h3 id="checking-initial-leader">Checking Initial Leader</h3>
+<p><div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-metadata-quorum.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w"> </span>describe<span class="w"> </span>--status
+ClusterId:<span class="w">              </span>6LKJ0UFeRwKeyU_G1HdZxg
+LeaderId:<span class="w">               </span><span class="m">5</span>
+LeaderEpoch:<span class="w">            </span><span class="m">116</span>
+HighWatermark:<span class="w">          </span><span class="m">30543</span>
+MaxFollowerLag:<span class="w">         </span><span class="m">0</span>
+MaxFollowerLagTimeMs:<span class="w">   </span><span class="m">295</span>
+CurrentVoters:<span class="w">          </span><span class="o">[</span><span class="m">16</span>,17,3,4,5,9,10,11,15<span class="o">]</span>
+CurrentObservers:<span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2,6,7,8,12,13,14<span class="o">]</span>
+</code></pre></div>
+The current leader is controller 5. If controller 5 goes down, a new controller must be elected as leader.</p>
+<h3 id="deleting-controller-5">Deleting Controller 5</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>my-cluster-controller-5<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-a
+pod<span class="w"> </span><span class="s2">&quot;my-cluster-controller-5&quot;</span><span class="w"> </span>deleted
+</code></pre></div>
+<h3 id="new-leader-election-output">New Leader Election Output</h3>
+<p><div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-metadata-quorum.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w"> </span>describe<span class="w"> </span>--status
+ClusterId:<span class="w">              </span>6LKJ0UFeRwKeyU_G1HdZxg
+LeaderId:<span class="w">               </span><span class="m">4</span>
+LeaderEpoch:<span class="w">            </span><span class="m">118</span>
+HighWatermark:<span class="w">          </span><span class="m">30960</span>
+MaxFollowerLag:<span class="w">         </span><span class="m">30961</span>
+MaxFollowerLagTimeMs:<span class="w">   </span>-1
+CurrentVoters:<span class="w">          </span><span class="o">[</span><span class="m">16</span>,17,3,4,5,9,10,11,15<span class="o">]</span>
+CurrentObservers:<span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2,6,7,8,12,13,14<span class="o">]</span>
+</code></pre></div>
+The new leader is controller 4</p>
+<h3 id="deleting-controller-4">Deleting Controller 4</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>my-cluster-controller-4<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-a
+pod<span class="w"> </span><span class="s2">&quot;my-cluster-controller-4&quot;</span><span class="w"> </span>deleted
+</code></pre></div>
+<h3 id="new-leader-election-output_1">New Leader Election Output</h3>
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-metadata-quorum.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w"> </span>describe<span class="w"> </span>--status
+ClusterId:<span class="w">              </span>6LKJ0UFeRwKeyU_G1HdZxg
+LeaderId:<span class="w">               </span><span class="m">3</span>
+LeaderEpoch:<span class="w">            </span><span class="m">120</span>
+HighWatermark:<span class="w">          </span><span class="m">31046</span>
+MaxFollowerLag:<span class="w">         </span><span class="m">31047</span>
+MaxFollowerLagTimeMs:<span class="w">   </span>-1
+CurrentVoters:<span class="w">          </span><span class="o">[</span><span class="m">16</span>,17,3,4,5,9,10,11,15<span class="o">]</span>
+CurrentObservers:<span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2,6,7,8,12,13,14<span class="o">]</span>
+</code></pre></div>
+<p>These results however shows leader election works inside a cluster only, hence we deleted even more leaders to see if leader election works across cluster.</p>
+<h3 id="checking-cross-cluster-leader-election">Checking cross cluster leader election</h3>
+<p>Current leader is 5
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-metadata-quorum.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w"> </span>describe<span class="w"> </span>--status
+ClusterId:<span class="w">              </span>6LKJ0UFeRwKeyU_G1HdZxg
+LeaderId:<span class="w">               </span><span class="m">5</span>
+LeaderEpoch:<span class="w">            </span><span class="m">122</span>
+HighWatermark:<span class="w">          </span><span class="m">31124</span>
+MaxFollowerLag:<span class="w">         </span><span class="m">31125</span>
+MaxFollowerLagTimeMs:<span class="w">   </span>-1
+CurrentVoters:<span class="w">          </span><span class="o">[</span><span class="m">16</span>,17,3,4,5,9,10,11,15<span class="o">]</span>
+CurrentObservers:<span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2,6,7,8,12,13,14<span class="o">]</span>
+</code></pre></div>
+Deleting leader 5
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pod<span class="w"> </span>my-cluster-controller-5<span class="w"> </span>-n<span class="w"> </span>real<span class="w"> </span>--kubeconfig<span class="w"> </span>config-test-a
+pod<span class="w"> </span><span class="s2">&quot;my-cluster-controller-5&quot;</span><span class="w"> </span>deleted
+</code></pre></div>
+New leader 9
+<div class="highlight"><pre><span></span><code>sh-5.1$<span class="w"> </span>./kafka-metadata-quorum.sh<span class="w"> </span>--bootstrap-server<span class="w"> </span>my-cluster-kafka-bootstrap:9092<span class="w"> </span>describe<span class="w"> </span>--status
+ClusterId:<span class="w">              </span>6LKJ0UFeRwKeyU_G1HdZxg
+LeaderId:<span class="w">               </span><span class="m">9</span>
+LeaderEpoch:<span class="w">            </span><span class="m">124</span>
+HighWatermark:<span class="w">          </span><span class="m">31186</span>
+MaxFollowerLag:<span class="w">         </span><span class="m">0</span>
+MaxFollowerLagTimeMs:<span class="w">   </span><span class="m">271</span>
+CurrentVoters:<span class="w">          </span><span class="o">[</span><span class="m">16</span>,17,3,4,5,9,10,11,15<span class="o">]</span>
+CurrentObservers:<span class="w">       </span><span class="o">[</span><span class="m">0</span>,1,2,6,7,8,12,13,14<span class="o">]</span>
+</code></pre></div>
+Conclusion: Cross cluster controller leader election works seamlessly in a stretch cluster setup</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../Testing-cluster-failover/" class="btn btn-neutral float-left" title="Cluster Failover Testing"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../Testing-performance/" class="btn btn-neutral float-right" title="Performance Testing">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Testing-cluster-failover/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Testing-performance/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
