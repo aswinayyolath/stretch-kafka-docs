@@ -135,8 +135,6 @@ aswinayyolath/stretchcluster:latest
       cluster-a.secret=secret-cluster-a
       cluster-b.url=<cluster-b URL>
       cluster-b.secret=secret-cluster-b
-- name: STRIMZI_NETWORK_POLICY_GENERATION
-  value: 'false'
 ```
 
 **Remote clusters**
@@ -370,20 +368,6 @@ Instead of defining the cross-cluster type separately for each `KafkaNodePool`, 
 - The `Kafka` CR serves as a logical place to store this information since the cross-cluster type is a shared property across all clusters in a stretch Kafka setup.
 - This ensures consistency and simplicity in configuration by avoiding redundant definitions in multiple `KafkaNodePool` CRs.
 
-#### STRIMZI_NETWORK_POLICY_GENERATION
-
-You need to set `STRIMZI_NETWORK_POLICY_GENERATION` to `false` because the default `NetworkPolicy` created by Strimzi restricts traffic to Kafka pods within a specific namespace. By default, Kafka pods can only receive traffic from:
-
-- Kafka clients and Kafka-related components within the same cluster (on port 9090).
-- Specific Strimzi components such as:
-    - Cluster operator
-    - Entity operator
-    - Kafka exporter
-    - Cruise control
-    - (on ports 9091, 8443, 9092, and 9093).
-
-This policy improves security by ensuring that only necessary services can communicate with Kafka pods. However, it also blocks traffic between Kubernetes clusters, which is required for stretch cluster deployments. To allow communication between Kubernetes clusters, you must set `STRIMZI_NETWORK_POLICY_GENERATION` to `false`.
-
 #### STRIMZI_STRETCH_MODE
 
 By default, Strimzi expects both the `Kafka` and `KafkaNodePool` (KNP) resources to be present in the same cluster where it creates the StrimziPodSet (SPS) and Kafka pods.
@@ -451,8 +435,6 @@ Modify 060-Deployment-strimzi-cluster-operator.yaml and add:
       cluster-a.secret=secret-cluster-a
       cluster-b.url=<cluster-b URL>
       cluster-b.secret=secret-cluster-b
-- name: STRIMZI_NETWORK_POLICY_GENERATION
-  value: 'false'
 ```
 
 **Remote cluster configuration**
