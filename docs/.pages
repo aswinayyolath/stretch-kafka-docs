@@ -14,3 +14,4 @@ nav:
     - Testing-failover-and-resiliency.md
     - Testing-performance.md
     - Setting-up-Rack-Awareness-In-Stretch-Cluster.md
+    - EntityOperator.md
